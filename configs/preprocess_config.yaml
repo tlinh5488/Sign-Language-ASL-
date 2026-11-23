@@ -1,0 +1,71 @@
+# Configuration for Giai đoạn 2 — Tiền xử lý (Thiên)
+#   Step 2.1  Trích landmark bằng MediaPipe Holistic  (src/preprocess/extract_landmarks.py)
+#   Step 2.2+ Chuẩn hóa & chuỗi cố định độ dài         (src/preprocess/normalize.py, sequence.py, build_features.py)
+#
+# Input manifests come from Stage 1 (configs/data_config.yaml -> paths.*_manifest).
+
+data_config: "configs/data_config.yaml"
+
+paths:
+  root_dir: "."
+  landmarks_dir: "data/landmarks"   # raw per-video .npz: <landmarks_dir>/<split>/<class_id>/<sample_id>.npz
+  features_dir: "data/features"     # normalized fixed-length features (normalizer output)
+
+# Which Stage-1 manifests to extract (keys -> paths.<key> in data_config.yaml).
+# split name used for output dirs is the manifest's `split` column
+# (train_augmented.csv rows have split == "train").
+manifests:
+  train: "train_augmented_manifest"
+  val: "val_manifest"
+  test: "test_manifest"
+
+holistic:
+  static_image_mode: false
+  model_complexity: 1               # 0 = lite, 1 = full, 2 = heavy
+  smooth_landmarks: true
+  refine_face_landmarks: false      # true -> 478 face points; we keep 468 (contract)
+  min_detection_confidence: 0.5
+  min_tracking_confidence: 0.5
+  max_frames: null                  # cap decoded frames per video (null = all)
+
+extraction:
+  num_workers: 1                    # >1 uses a process pool (one Holistic per process)
+  overwrite: false                  # skip already-extracted .npz files
+  limit: null                       # only first N rows per manifest (debug)
+
+normalization:
+  # pose_upper+hands (default) | pose_upper+hands+face_subset
+  feature_set: "pose_upper+hands"
+  hand_origin: "wrist"
+  hand_scale: "wrist_to_middle_mcp"
+  pose_origin: "shoulder_center"
+  pose_scale: "shoulder_width"
+  face_origin: "nose"
+  face_scale: "shoulder_width"
+  hand:
+    origin: "wrist"                 # hand-local coords relative to WRIST (0)
+    scale: "wrist_to_middle_mcp"    # divide by ||WRIST - MIDDLE_MCP (9)||
+  pose:
+    origin: "shoulder_center"       # midpoint of L_SHOULDER (11) / R_SHOULDER (12)
+    scale: "shoulder_width"         # ||L_SHOULDER - R_SHOULDER||
+  face:
+    origin: "nose"                  # FaceMesh nose tip (idx 1)
+    scale: "shoulder_width"
+  include_hand_global_position: true  # also keep wrist position in pose frame
+  use_z: true
+  add_velocity: false
+  eps: 1.0e-6
+
+sequence:
+  target_len: 48                    # frames per sample after resampling
+  method: "resample"                # uniform linear interpolation over time
+  fallback: "pad"                   # used when resampling is not possible
+  interpolate_missing_hands: true   # fill short hand-detection gaps linearly
+  max_gap: 8                        # max consecutive missing frames to interpolate
+  trim_idle: true                   # drop leading/trailing frames with no hand detected
+  pad_value: 0.0
+
+output:
+  format: "npz"
+  per_split_packed: true            # one packed file per split: <features_dir>/<split>.npz
+  index_suffix: "_landmarks_index.csv"

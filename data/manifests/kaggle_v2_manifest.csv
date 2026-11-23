@@ -1,0 +1,121 @@
+﻿sample_id,video_path,label,class_id,signer_id,source,split,is_augmented,parent_sample_id,aug_type,fps,num_frames,duration_sec,width,height,is_valid
+vsl2_buoi_trua_001053,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/test/Buổi trưa/001053.mp4,buổi trưa,27,vsl2_signer_002,kaggle_vsl_v2,,False,,,25.0,65,2.6,224,224,True
+vsl2_con_cho_002347,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/test/Con chó/002347.mp4,con chó,23,vsl2_signer_003,kaggle_vsl_v2,,False,,,25.0,56,2.24,224,224,True
+vsl2_con_meo_003206,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/test/Con mèo/003206.mp4,con mèo,24,vsl2_signer_004,kaggle_vsl_v2,,False,,,25.0,69,2.76,224,224,True
+vsl2_giup_do_001358,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/test/Giúp đỡ/001358.mp4,giúp đỡ,0,vsl2_signer_002,kaggle_vsl_v2,,False,,,25.0,62,2.48,224,224,True
+vsl2_gao_001949,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/test/Gạo/001949.mp4,gạo,21,vsl2_signer_003,kaggle_vsl_v2,,False,,,25.0,60,2.4,224,224,True
+vsl2_ong_noi_002422,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/test/Ông nội/002422.mp4,ông nội,11,vsl2_signer_003,kaggle_vsl_v2,,False,,,25.0,58,2.32,224,224,True
+vsl2_buoi_sang_000191,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Buổi sáng/000191.mp4,buổi sáng,26,vsl2_signer_001,kaggle_vsl_v2,,False,,,25.0,60,2.4,224,224,True
+vsl2_buoi_sang_001051,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Buổi sáng/001051.mp4,buổi sáng,26,vsl2_signer_002,kaggle_vsl_v2,,False,,,25.0,60,2.4,224,224,True
+vsl2_buoi_sang_001895,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Buổi sáng/001895.mp4,buổi sáng,26,vsl2_signer_003,kaggle_vsl_v2,,False,,,25.0,59,2.36,224,224,True
+vsl2_buoi_sang_002738,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Buổi sáng/002738.mp4,buổi sáng,26,vsl2_signer_004,kaggle_vsl_v2,,False,,,25.0,64,2.56,224,224,True
+vsl2_buoi_trua_000193,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Buổi trưa/000193.mp4,buổi trưa,27,vsl2_signer_001,kaggle_vsl_v2,,False,,,25.0,68,2.72,224,224,True
+vsl2_buoi_trua_001897,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Buổi trưa/001897.mp4,buổi trưa,27,vsl2_signer_003,kaggle_vsl_v2,,False,,,25.0,64,2.56,224,224,True
+vsl2_buoi_trua_002740,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Buổi trưa/002740.mp4,buổi trưa,27,vsl2_signer_004,kaggle_vsl_v2,,False,,,25.0,60,2.4,224,224,True
+vsl2_buoi_toi_000196,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Buổi tối/000196.mp4,buổi tối,28,vsl2_signer_001,kaggle_vsl_v2,,False,,,25.0,67,2.68,224,224,True
+vsl2_buoi_toi_001058,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Buổi tối/001058.mp4,buổi tối,28,vsl2_signer_002,kaggle_vsl_v2,,False,,,25.0,59,2.36,224,224,True
+vsl2_buoi_toi_001901,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Buổi tối/001901.mp4,buổi tối,28,vsl2_signer_003,kaggle_vsl_v2,,False,,,25.0,65,2.6,224,224,True
+vsl2_buoi_toi_002745,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Buổi tối/002745.mp4,buổi tối,28,vsl2_signer_004,kaggle_vsl_v2,,False,,,25.0,71,2.84,224,224,True
+vsl2_chi_000002,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Chị/000002.mp4,chị,10,vsl2_signer_001,kaggle_vsl_v2,,False,,,25.0,60,2.4,224,224,True
+vsl2_chi_000863,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Chị/000863.mp4,chị,10,vsl2_signer_002,kaggle_vsl_v2,,False,,,25.0,59,2.36,224,224,True
+vsl2_chi_001704,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Chị/001704.mp4,chị,10,vsl2_signer_003,kaggle_vsl_v2,,False,,,25.0,72,2.88,224,224,True
+vsl2_chi_002557,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Chị/002557.mp4,chị,10,vsl2_signer_004,kaggle_vsl_v2,,False,,,25.0,59,2.36,224,224,True
+vsl2_con_cho_000649,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Con chó/000649.mp4,con chó,23,vsl2_signer_001,kaggle_vsl_v2,,False,,,25.0,68,2.72,224,224,True
+vsl2_con_cho_001497,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Con chó/001497.mp4,con chó,23,vsl2_signer_002,kaggle_vsl_v2,,False,,,25.0,60,2.4,224,224,True
+vsl2_con_cho_003203,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Con chó/003203.mp4,con chó,23,vsl2_signer_004,kaggle_vsl_v2,,False,,,25.0,65,2.6,224,224,True
+vsl2_con_meo_000653,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Con mèo/000653.mp4,con mèo,24,vsl2_signer_001,kaggle_vsl_v2,,False,,,25.0,59,2.36,224,224,True
+vsl2_con_meo_001498,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Con mèo/001498.mp4,con mèo,24,vsl2_signer_002,kaggle_vsl_v2,,False,,,25.0,62,2.48,224,224,True
+vsl2_con_meo_002349,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Con mèo/002349.mp4,con mèo,24,vsl2_signer_003,kaggle_vsl_v2,,False,,,25.0,55,2.2,224,224,True
+vsl2_cong_vien_000079,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Công viên/000079.mp4,công viên,25,vsl2_signer_001,kaggle_vsl_v2,,False,,,25.0,61,2.44,224,224,True
+vsl2_cong_vien_000936,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Công viên/000936.mp4,công viên,25,vsl2_signer_002,kaggle_vsl_v2,,False,,,25.0,59,2.36,224,224,True
+vsl2_cong_vien_001783,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Công viên/001783.mp4,công viên,25,vsl2_signer_003,kaggle_vsl_v2,,False,,,25.0,66,2.64,224,224,True
+vsl2_cong_vien_002629,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Công viên/002629.mp4,công viên,25,vsl2_signer_004,kaggle_vsl_v2,,False,,,25.0,75,3.0,224,224,True
+vsl2_doi_000751,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Dỗi/000751.mp4,dỗi,9,vsl2_signer_001,kaggle_vsl_v2,,False,,,25.0,64,2.56,224,224,True
+vsl2_doi_001597,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Dỗi/001597.mp4,dỗi,9,vsl2_signer_002,kaggle_vsl_v2,,False,,,25.0,61,2.44,224,224,True
+vsl2_doi_002447,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Dỗi/002447.mp4,dỗi,9,vsl2_signer_003,kaggle_vsl_v2,,False,,,25.0,56,2.24,224,224,True
+vsl2_doi_003306,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Dỗi/003306.mp4,dỗi,9,vsl2_signer_004,kaggle_vsl_v2,,False,,,25.0,60,2.4,224,224,True
+vsl2_giup_do_000506,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Giúp đỡ/000506.mp4,giúp đỡ,0,vsl2_signer_001,kaggle_vsl_v2,,False,,,25.0,65,2.6,224,224,True
+vsl2_giup_do_002216,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Giúp đỡ/002216.mp4,giúp đỡ,0,vsl2_signer_003,kaggle_vsl_v2,,False,,,25.0,62,2.48,224,224,True
+vsl2_giup_do_003067,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Giúp đỡ/003067.mp4,giúp đỡ,0,vsl2_signer_004,kaggle_vsl_v2,,False,,,25.0,71,2.84,224,224,True
+vsl2_gao_000242,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Gạo/000242.mp4,gạo,21,vsl2_signer_001,kaggle_vsl_v2,,False,,,25.0,67,2.68,224,224,True
+vsl2_gao_001101,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Gạo/001101.mp4,gạo,21,vsl2_signer_002,kaggle_vsl_v2,,False,,,25.0,60,2.4,224,224,True
+vsl2_gao_002789,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Gạo/002789.mp4,gạo,21,vsl2_signer_004,kaggle_vsl_v2,,False,,,25.0,62,2.48,224,224,True
+vsl2_hua_000492,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Hứa/000492.mp4,hứa,4,vsl2_signer_001,kaggle_vsl_v2,,False,,,25.0,57,2.28,224,224,True
+vsl2_hua_001344,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Hứa/001344.mp4,hứa,4,vsl2_signer_002,kaggle_vsl_v2,,False,,,25.0,60,2.4,224,224,True
+vsl2_hua_002200,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Hứa/002200.mp4,hứa,4,vsl2_signer_003,kaggle_vsl_v2,,False,,,25.0,56,2.24,224,224,True
+vsl2_hua_003052,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Hứa/003052.mp4,hứa,4,vsl2_signer_004,kaggle_vsl_v2,,False,,,25.0,69,2.76,224,224,True
+vsl2_khong_cho_000791,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Không cho/000791.mp4,không cho,6,vsl2_signer_001,kaggle_vsl_v2,,False,,,25.0,59,2.36,224,224,True
+vsl2_khong_cho_001638,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Không cho/001638.mp4,không cho,6,vsl2_signer_002,kaggle_vsl_v2,,False,,,25.0,55,2.2,224,224,True
+vsl2_khong_cho_002489,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Không cho/002489.mp4,không cho,6,vsl2_signer_003,kaggle_vsl_v2,,False,,,25.0,46,1.84,224,224,True
+vsl2_khong_cho_003348,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Không cho/003348.mp4,không cho,6,vsl2_signer_004,kaggle_vsl_v2,,False,,,25.0,55,2.2,224,224,True
+vsl2_khong_nen_000786,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Không nên/000786.mp4,không nên,5,vsl2_signer_001,kaggle_vsl_v2,,False,,,25.0,68,2.72,224,224,True
+vsl2_khong_nen_001634,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Không nên/001634.mp4,không nên,5,vsl2_signer_002,kaggle_vsl_v2,,False,,,25.0,64,2.56,224,224,True
+vsl2_khong_nen_002485,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Không nên/002485.mp4,không nên,5,vsl2_signer_003,kaggle_vsl_v2,,False,,,25.0,63,2.52,224,224,True
+vsl2_khong_nen_003345,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Không nên/003345.mp4,không nên,5,vsl2_signer_004,kaggle_vsl_v2,,False,,,25.0,73,2.92,224,224,True
+vsl2_khong_quen_000785,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Không quen/000785.mp4,không quen,7,vsl2_signer_001,kaggle_vsl_v2,,False,,,25.0,65,2.6,224,224,True
+vsl2_khong_quen_001632,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Không quen/001632.mp4,không quen,7,vsl2_signer_002,kaggle_vsl_v2,,False,,,25.0,53,2.12,224,224,True
+vsl2_khong_quen_002483,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Không quen/002483.mp4,không quen,7,vsl2_signer_003,kaggle_vsl_v2,,False,,,25.0,69,2.76,224,224,True
+vsl2_khong_quen_003342,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Không quen/003342.mp4,không quen,7,vsl2_signer_004,kaggle_vsl_v2,,False,,,25.0,61,2.44,224,224,True
+vsl2_keo_000260,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Kẹo/000260.mp4,kẹo,20,vsl2_signer_001,kaggle_vsl_v2,,False,,,25.0,67,2.68,224,224,True
+vsl2_keo_001119,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Kẹo/001119.mp4,kẹo,20,vsl2_signer_002,kaggle_vsl_v2,,False,,,25.0,60,2.4,224,224,True
+vsl2_keo_001968,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Kẹo/001968.mp4,kẹo,20,vsl2_signer_003,kaggle_vsl_v2,,False,,,25.0,67,2.68,224,224,True
+vsl2_keo_002807,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Kẹo/002807.mp4,kẹo,20,vsl2_signer_004,kaggle_vsl_v2,,False,,,25.0,73,2.92,224,224,True
+vsl2_muon_000436,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Muốn/000436.mp4,muốn,1,vsl2_signer_001,kaggle_vsl_v2,,False,,,25.0,54,2.16,224,224,True
+vsl2_muon_001288,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Muốn/001288.mp4,muốn,1,vsl2_signer_002,kaggle_vsl_v2,,False,,,25.0,59,2.36,224,224,True
+vsl2_muon_002146,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Muốn/002146.mp4,muốn,1,vsl2_signer_003,kaggle_vsl_v2,,False,,,25.0,63,2.52,224,224,True
+vsl2_muon_002998,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Muốn/002998.mp4,muốn,1,vsl2_signer_004,kaggle_vsl_v2,,False,,,25.0,54,2.16,224,224,True
+vsl2_mua_he_000105,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Mùa hè/000105.mp4,mùa hè,29,vsl2_signer_001,kaggle_vsl_v2,,False,,,25.0,56,2.24,224,224,True
+vsl2_mua_he_000964,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Mùa hè/000964.mp4,mùa hè,29,vsl2_signer_002,kaggle_vsl_v2,,False,,,25.0,54,2.16,224,224,True
+vsl2_mua_he_001811,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Mùa hè/001811.mp4,mùa hè,29,vsl2_signer_003,kaggle_vsl_v2,,False,,,25.0,57,2.28,224,224,True
+vsl2_mua_he_002660,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Mùa hè/002660.mp4,mùa hè,29,vsl2_signer_004,kaggle_vsl_v2,,False,,,25.0,59,2.36,224,224,True
+vsl2_moi_000604,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Mới/000604.mp4,mới,15,vsl2_signer_001,kaggle_vsl_v2,,False,,,25.0,56,2.24,224,224,True
+vsl2_moi_001449,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Mới/001449.mp4,mới,15,vsl2_signer_002,kaggle_vsl_v2,,False,,,25.0,53,2.12,224,224,True
+vsl2_moi_002303,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Mới/002303.mp4,mới,15,vsl2_signer_003,kaggle_vsl_v2,,False,,,25.0,55,2.2,224,224,True
+vsl2_moi_003154,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Mới/003154.mp4,mới,15,vsl2_signer_004,kaggle_vsl_v2,,False,,,25.0,73,2.92,224,224,True
+vsl2_pho_000249,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Phở/000249.mp4,phở,17,vsl2_signer_001,kaggle_vsl_v2,,False,,,25.0,55,2.2,224,224,True
+vsl2_pho_001108,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Phở/001108.mp4,phở,17,vsl2_signer_002,kaggle_vsl_v2,,False,,,25.0,70,2.8,224,224,True
+vsl2_pho_001958,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Phở/001958.mp4,phở,17,vsl2_signer_003,kaggle_vsl_v2,,False,,,25.0,65,2.6,224,224,True
+vsl2_pho_002798,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Phở/002798.mp4,phở,17,vsl2_signer_004,kaggle_vsl_v2,,False,,,25.0,65,2.6,224,224,True
+vsl2_qua_dua_000711,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Quả dừa/000711.mp4,quả dừa,22,vsl2_signer_001,kaggle_vsl_v2,,False,,,25.0,57,2.28,224,224,True
+vsl2_qua_dua_001558,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Quả dừa/001558.mp4,quả dừa,22,vsl2_signer_002,kaggle_vsl_v2,,False,,,25.0,54,2.16,224,224,True
+vsl2_qua_dua_002407,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Quả dừa/002407.mp4,quả dừa,22,vsl2_signer_003,kaggle_vsl_v2,,False,,,25.0,51,2.04,224,224,True
+vsl2_qua_dua_003265,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Quả dừa/003265.mp4,quả dừa,22,vsl2_signer_004,kaggle_vsl_v2,,False,,,25.0,64,2.56,224,224,True
+vsl2_sua_000277,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Sữa/000277.mp4,sữa,18,vsl2_signer_001,kaggle_vsl_v2,,False,,,25.0,61,2.44,224,224,True
+vsl2_sua_001137,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Sữa/001137.mp4,sữa,18,vsl2_signer_002,kaggle_vsl_v2,,False,,,25.0,62,2.48,224,224,True
+vsl2_sua_001989,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Sữa/001989.mp4,sữa,18,vsl2_signer_003,kaggle_vsl_v2,,False,,,25.0,60,2.4,224,224,True
+vsl2_sua_002833,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Sữa/002833.mp4,sữa,18,vsl2_signer_004,kaggle_vsl_v2,,False,,,25.0,67,2.68,224,224,True
+vsl2_thong_minh_000634,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Thông minh/000634.mp4,thông minh,13,vsl2_signer_001,kaggle_vsl_v2,,False,,,25.0,63,2.52,224,224,True
+vsl2_thong_minh_001480,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Thông minh/001480.mp4,thông minh,13,vsl2_signer_002,kaggle_vsl_v2,,False,,,25.0,55,2.2,224,224,True
+vsl2_thong_minh_002331,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Thông minh/002331.mp4,thông minh,13,vsl2_signer_003,kaggle_vsl_v2,,False,,,25.0,49,1.96,224,224,True
+vsl2_thong_minh_003187,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Thông minh/003187.mp4,thông minh,13,vsl2_signer_004,kaggle_vsl_v2,,False,,,25.0,62,2.48,224,224,True
+vsl2_thom_000545,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Thơm/000545.mp4,thơm,14,vsl2_signer_001,kaggle_vsl_v2,,False,,,25.0,57,2.28,224,224,True
+vsl2_thom_001395,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Thơm/001395.mp4,thơm,14,vsl2_signer_002,kaggle_vsl_v2,,False,,,25.0,55,2.2,224,224,True
+vsl2_thom_002250,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Thơm/002250.mp4,thơm,14,vsl2_signer_003,kaggle_vsl_v2,,False,,,25.0,64,2.56,224,224,True
+vsl2_thom_003100,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Thơm/003100.mp4,thơm,14,vsl2_signer_004,kaggle_vsl_v2,,False,,,25.0,57,2.28,224,224,True
+vsl2_tiep_tuc_000474,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Tiếp tục/000474.mp4,tiếp tục,2,vsl2_signer_001,kaggle_vsl_v2,,False,,,25.0,58,2.32,224,224,True
+vsl2_tiep_tuc_001325,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Tiếp tục/001325.mp4,tiếp tục,2,vsl2_signer_002,kaggle_vsl_v2,,False,,,25.0,64,2.56,224,224,True
+vsl2_tiep_tuc_002180,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Tiếp tục/002180.mp4,tiếp tục,2,vsl2_signer_003,kaggle_vsl_v2,,False,,,25.0,66,2.64,224,224,True
+vsl2_tiep_tuc_003034,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Tiếp tục/003034.mp4,tiếp tục,2,vsl2_signer_004,kaggle_vsl_v2,,False,,,25.0,70,2.8,224,224,True
+vsl2_trung_000256,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Trứng/000256.mp4,trứng,19,vsl2_signer_001,kaggle_vsl_v2,,False,,,25.0,65,2.6,224,224,True
+vsl2_trung_001114,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Trứng/001114.mp4,trứng,19,vsl2_signer_002,kaggle_vsl_v2,,False,,,25.0,63,2.52,224,224,True
+vsl2_trung_001964,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Trứng/001964.mp4,trứng,19,vsl2_signer_003,kaggle_vsl_v2,,False,,,25.0,60,2.4,224,224,True
+vsl2_trung_002803,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Trứng/002803.mp4,trứng,19,vsl2_signer_004,kaggle_vsl_v2,,False,,,25.0,64,2.56,224,224,True
+vsl2_tu_choi_000486,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Từ chối/000486.mp4,từ chối,3,vsl2_signer_001,kaggle_vsl_v2,,False,,,25.0,63,2.52,224,224,True
+vsl2_tu_choi_001337,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Từ chối/001337.mp4,từ chối,3,vsl2_signer_002,kaggle_vsl_v2,,False,,,25.0,63,2.52,224,224,True
+vsl2_tu_choi_002193,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Từ chối/002193.mp4,từ chối,3,vsl2_signer_003,kaggle_vsl_v2,,False,,,25.0,70,2.8,224,224,True
+vsl2_tu_choi_003046,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Từ chối/003046.mp4,từ chối,3,vsl2_signer_004,kaggle_vsl_v2,,False,,,25.0,64,2.56,224,224,True
+vsl2_xem_000739,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Xem/000739.mp4,xem,8,vsl2_signer_001,kaggle_vsl_v2,,False,,,25.0,60,2.4,224,224,True
+vsl2_xem_001586,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Xem/001586.mp4,xem,8,vsl2_signer_002,kaggle_vsl_v2,,False,,,25.0,50,2.0,224,224,True
+vsl2_xem_002435,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Xem/002435.mp4,xem,8,vsl2_signer_003,kaggle_vsl_v2,,False,,,25.0,50,2.0,224,224,True
+vsl2_xem_003295,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Xem/003295.mp4,xem,8,vsl2_signer_004,kaggle_vsl_v2,,False,,,25.0,64,2.56,224,224,True
+vsl2_yeu_000599,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Yếu/000599.mp4,yếu,16,vsl2_signer_001,kaggle_vsl_v2,,False,,,25.0,68,2.72,224,224,True
+vsl2_yeu_001445,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Yếu/001445.mp4,yếu,16,vsl2_signer_002,kaggle_vsl_v2,,False,,,25.0,66,2.64,224,224,True
+vsl2_yeu_002299,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Yếu/002299.mp4,yếu,16,vsl2_signer_003,kaggle_vsl_v2,,False,,,25.0,59,2.36,224,224,True
+vsl2_yeu_003151,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Yếu/003151.mp4,yếu,16,vsl2_signer_004,kaggle_vsl_v2,,False,,,25.0,75,3.0,224,224,True
+vsl2_ong_ngoai_000731,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Ông ngoại/000731.mp4,ông ngoại,12,vsl2_signer_001,kaggle_vsl_v2,,False,,,25.0,60,2.4,224,224,True
+vsl2_ong_ngoai_001577,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Ông ngoại/001577.mp4,ông ngoại,12,vsl2_signer_002,kaggle_vsl_v2,,False,,,25.0,68,2.72,224,224,True
+vsl2_ong_ngoai_002427,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Ông ngoại/002427.mp4,ông ngoại,12,vsl2_signer_003,kaggle_vsl_v2,,False,,,25.0,66,2.64,224,224,True
+vsl2_ong_ngoai_003285,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Ông ngoại/003285.mp4,ông ngoại,12,vsl2_signer_004,kaggle_vsl_v2,,False,,,25.0,70,2.8,224,224,True
+vsl2_ong_noi_000726,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Ông nội/000726.mp4,ông nội,11,vsl2_signer_001,kaggle_vsl_v2,,False,,,25.0,69,2.76,224,224,True
+vsl2_ong_noi_001572,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Ông nội/001572.mp4,ông nội,11,vsl2_signer_002,kaggle_vsl_v2,,False,,,25.0,65,2.6,224,224,True
+vsl2_ong_noi_003280,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Ông nội/003280.mp4,ông nội,11,vsl2_signer_004,kaggle_vsl_v2,,False,,,25.0,75,3.0,224,224,True

@@ -1,0 +1,31 @@
+﻿sample_id,video_path,label,class_id,signer_id,source,split,is_augmented,parent_sample_id,aug_type,fps,num_frames,duration_sec,width,height,is_valid
+kaggle_40_d0033b,data/raw/kaggle_vsl/Dataset/Videos/D0033B.mp4,không cho,6,kaggle_signer_north,kaggle_vsl,test,False,,,29.97,111,3.7037,1280,720,True
+kaggle_44_d0035b,data/raw/kaggle_vsl/Dataset/Videos/D0035B.mp4,không nên,5,kaggle_signer_north,kaggle_vsl,test,False,,,29.97,83,2.7694,1280,720,True
+kaggle_138_d0103b,data/raw/kaggle_vsl/Dataset/Videos/D0103B.mp4,từ chối,3,kaggle_signer_north,kaggle_vsl,test,False,,,29.97,179,5.9726,1280,720,True
+kaggle_146_d0109b,data/raw/kaggle_vsl/Dataset/Videos/D0109B.mp4,không quen,7,kaggle_signer_north,kaggle_vsl,test,False,,,29.97,91,3.0364,1280,720,True
+kaggle_220_d0165b,data/raw/kaggle_vsl/Dataset/Videos/D0165B.mp4,hứa,4,kaggle_signer_north,kaggle_vsl,test,False,,,29.97,220,7.3407,1280,720,True
+kaggle_259_d0192b,data/raw/kaggle_vsl/Dataset/Videos/D0192B.mp4,xem,8,kaggle_signer_north,kaggle_vsl,test,False,,,29.97,88,2.9363,1280,720,True
+kaggle_350_d0271b,data/raw/kaggle_vsl/Dataset/Videos/D0271B.mp4,dỗi,9,kaggle_signer_north,kaggle_vsl,test,False,,,29.97,117,3.9039,1280,720,True
+kaggle_971_w00369b,data/raw/kaggle_vsl/Dataset/Videos/W00369B.mp4,buổi tối,28,kaggle_signer_north,kaggle_vsl,test,False,,,29.97,121,4.0374,1280,720,True
+kaggle_973_w00370b,data/raw/kaggle_vsl/Dataset/Videos/W00370B.mp4,buổi trưa,27,kaggle_signer_north,kaggle_vsl,test,False,,,29.97,124,4.1375,1280,720,True
+kaggle_1150_w00570b,data/raw/kaggle_vsl/Dataset/Videos/W00570B.mp4,chị,10,kaggle_signer_north,kaggle_vsl,test,False,,,29.97,119,3.9706,1280,720,True
+kaggle_1303_w00739b,data/raw/kaggle_vsl/Dataset/Videos/W00739B.mp4,con chó,23,kaggle_signer_north,kaggle_vsl,test,False,,,29.97,72,2.4024,1280,720,True
+kaggle_1343_w00772b,data/raw/kaggle_vsl/Dataset/Videos/W00772B.mp4,con mèo,24,kaggle_signer_north,kaggle_vsl,test,False,,,29.97,100,3.3367,1280,720,True
+kaggle_1421_w00850b,data/raw/kaggle_vsl/Dataset/Videos/W00850B.mp4,công viên,25,kaggle_signer_north,kaggle_vsl,test,False,,,29.97,99,3.3033,1280,720,True
+kaggle_1802_w01384b,data/raw/kaggle_vsl/Dataset/Videos/W01384B.mp4,gạo,21,kaggle_signer_north,kaggle_vsl,test,False,,,29.97,83,2.7694,1280,720,True
+kaggle_1889_w01497b,data/raw/kaggle_vsl/Dataset/Videos/W01497B.mp4,giúp đỡ,0,kaggle_signer_north,kaggle_vsl,test,False,,,29.97,74,2.4691,1280,720,True
+kaggle_2078_w01743b,data/raw/kaggle_vsl/Dataset/Videos/W01743B.mp4,kẹo,20,kaggle_signer_north,kaggle_vsl,test,False,,,29.97,102,3.4034,1280,720,True
+kaggle_2406_w02221b,data/raw/kaggle_vsl/Dataset/Videos/W02221B.mp4,muốn,1,kaggle_signer_north,kaggle_vsl,test,False,,,29.97,128,4.2709,1280,720,True
+kaggle_2448_w02264b,data/raw/kaggle_vsl/Dataset/Videos/W02264B.mp4,mới,15,kaggle_signer_north,kaggle_vsl,test,False,,,29.97,107,3.5702,1280,720,True
+kaggle_2453_w02270b,data/raw/kaggle_vsl/Dataset/Videos/W02270B.mp4,mùa hè,29,kaggle_signer_north,kaggle_vsl,test,False,,,29.97,105,3.5035,1280,720,True
+kaggle_2687_w02575b,data/raw/kaggle_vsl/Dataset/Videos/W02575B.mp4,ông ngoại,12,kaggle_signer_north,kaggle_vsl,test,False,,,29.97,109,3.637,1280,720,True
+kaggle_2689_w02576b,data/raw/kaggle_vsl/Dataset/Videos/W02576B.mp4,ông nội,11,kaggle_signer_north,kaggle_vsl,test,False,,,29.97,110,3.6703,1280,720,True
+kaggle_2768_w02696b,data/raw/kaggle_vsl/Dataset/Videos/W02696B.mp4,phở,17,kaggle_signer_north,kaggle_vsl,test,False,,,29.97,93,3.1031,1280,720,True
+kaggle_2801_w02732b,data/raw/kaggle_vsl/Dataset/Videos/W02732B.mp4,quả dừa,22,kaggle_signer_north,kaggle_vsl,test,False,,,29.97,95,3.1698,1280,720,True
+kaggle_3027_w03042b,data/raw/kaggle_vsl/Dataset/Videos/W03042B.mp4,sữa,18,kaggle_signer_north,kaggle_vsl,test,False,,,29.97,120,4.004,1280,720,True
+kaggle_3186_w03314b,data/raw/kaggle_vsl/Dataset/Videos/W03314B.mp4,thơm,14,kaggle_signer_north,kaggle_vsl,test,False,,,29.97,113,3.7704,1280,720,True
+kaggle_3262_w03421b,data/raw/kaggle_vsl/Dataset/Videos/W03421B.mp4,tiếp tục,2,kaggle_signer_north,kaggle_vsl,test,False,,,29.97,145,4.8382,1280,720,True
+kaggle_3408_w03659b,data/raw/kaggle_vsl/Dataset/Videos/W03659B.mp4,trứng,19,kaggle_signer_north,kaggle_vsl,test,False,,,29.97,119,3.9706,1280,720,True
+kaggle_3679_w04059b,data/raw/kaggle_vsl/Dataset/Videos/W04059B.mp4,yếu,16,kaggle_signer_north,kaggle_vsl,test,False,,,29.97,106,3.5369,1280,720,True
+kaggle_3883_w00368b,data/raw/kaggle_vsl/Dataset/Videos/W00368B.mp4,buổi sáng,26,kaggle_signer_north,kaggle_vsl,test,False,,,29.97,130,4.3377,1280,720,True
+kaggle_4272_w03288b,data/raw/kaggle_vsl/Dataset/Videos/W03288B.mp4,thông minh,13,kaggle_signer_north,kaggle_vsl,test,False,,,29.97,88,2.9363,1280,720,True

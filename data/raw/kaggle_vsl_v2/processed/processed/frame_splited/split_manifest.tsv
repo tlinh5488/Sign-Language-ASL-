@@ -1,0 +1,473 @@
+gloss	total	train	test
+An ủi	16	13	3
+Anh	84	67	17
+Ba lô	59	47	12
+Ban ngày	10	8	2
+Ban đêm	3	2	1
+Bia	58	46	12
+Biết	21	17	4
+Biếu tặng	24	19	5
+Buổi chiều	57	46	11
+Buổi sáng	57	46	11
+Buổi trưa	57	46	11
+Buổi tối	55	44	11
+Bà ngoại	60	48	12
+Bà nội	67	54	13
+Bàn phím	60	48	12
+Bàn tay	3	2	1
+Bác	70	56	14
+Bác sĩ	68	54	14
+Bánh bao	57	46	11
+Bánh chưng	69	55	14
+Bánh tét	69	55	14
+Bánh xèo	58	46	12
+Báo cáo	64	51	13
+Bây giờ	74	59	15
+Bình minh	61	49	12
+Bóng bàn	59	47	12
+Bóng chuyền	64	51	13
+Bóng rổ	65	52	13
+Bóng đá	60	48	12
+Bún	63	50	13
+Bút bi	59	47	12
+Bút chì	64	51	13
+Băn khoăn	27	22	5
+Bơi lội	57	46	11
+Bạn thân	9	7	2
+Bảng	57	46	11
+Bảo vệ	56	45	11
+Bận	58	46	12
+Bắt buộc	58	46	12
+Bắt chước	56	45	11
+Bế mạc	17	14	3
+Bệnh nhân	4	3	1
+Bệnh viện	97	78	19
+Bố	73	58	15
+Bộ y tế	8	6	2
+Ca sĩ	65	52	13
+Cao (người)	55	44	11
+Cao (đồ vật)	57	46	11
+Cay	56	45	11
+Chiều	32	26	6
+Cho	80	64	16
+Chua	59	47	12
+Chào	17	14	3
+Cháu	71	57	14
+Chân	32	26	6
+Chìa khóa	66	53	13
+Chú	67	54	13
+Chú ý	72	58	14
+Chúng ta	7	6	1
+Chăm chỉ	56	45	11
+Chơi cờ	66	53	13
+Chạy	93	74	19
+Chấp nhận	4	3	1
+Chậm chạp	64	51	13
+Chậm lại	33	26	7
+Chật	59	47	12
+Chết	58	46	12
+Chị	81	65	16
+Chồng	59	47	12
+Chợ	62	50	12
+Chụp hình	58	46	12
+Chủ nhật	73	58	15
+Chủ tịch	55	44	11
+Con bò	56	45	11
+Con chó	64	51	13
+Con dê	59	47	12
+Con gà	56	45	11
+Con gái	57	46	11
+Con gấu	27	22	5
+Con heo	74	59	15
+Con mèo	57	46	11
+Con rùa	60	48	12
+Con thỏ	56	45	11
+Con trai	58	46	12
+Con trâu	56	45	11
+Con vịt	57	46	11
+Cung cấp	58	46	12
+Cà phê	57	46	11
+Cá	27	22	5
+Cách ly	4	3	1
+Cái bàn	72	58	14
+Cái chảo	69	55	14
+Cái cửa	68	54	14
+Cái ghế	66	53	13
+Cái kéo	58	46	12
+Cái nồi	69	55	14
+Cái quần	16	13	3
+Cái áo	58	46	12
+Cái đèn	73	58	15
+Cám dỗ	30	24	6
+Có	58	46	12
+Có thể	10	8	2
+Cô	77	62	15
+Công ty	61	49	12
+Công viên	64	51	13
+Cũ	56	45	11
+Cơ thể	3	2	1
+Cười	56	45	11
+Cảm thấy	59	47	12
+Cảm ơn	87	70	17
+Cần	61	49	12
+Cầu lông	57	46	11
+Cậu	69	55	14
+Cắm trại	63	50	13
+Cục tẩy	58	46	12
+Cứng	66	53	13
+Cứu	25	20	5
+Cửa sổ	71	57	14
+Diễn viên	60	48	12
+Dài	71	57	14
+Dây chuyền	57	46	11
+Dép	54	43	11
+Dì	72	58	14
+Dũng cảm	58	46	12
+Dơ	73	58	15
+Dạy dỗ	19	15	4
+Dễ	106	85	21
+Dỗi	61	49	12
+Dở	60	48	12
+Dụng cụ học tập	58	46	12
+Dừng lại	58	46	12
+Dữ	62	50	12
+Em	84	67	17
+Ghét	70	56	14
+Già	57	46	11
+Giàu	69	55	14
+Giày	58	46	12
+Giám đốc	55	44	11
+Giáng sinh	58	46	12
+Giây	57	46	11
+Gió	70	56	14
+Giúp	18	14	4
+Giúp đỡ	66	53	13
+Giường	79	63	16
+Giấy nháp	58	46	12
+Giặt đồ	56	45	11
+Giỏi	56	45	11
+Giới thiệu	57	46	11
+Giờ	57	46	11
+Gạo	57	46	11
+Gần	60	48	12
+Gọi	58	46	12
+Gối (đầu)	70	56	14
+Gội đầu	60	48	12
+Hay (khen)	62	50	12
+Hiền	60	48	12
+Hiệu trưởng	57	46	11
+Ho	3	2	1
+Hoàng hôn	59	47	12
+Hy sinh	24	19	5
+Hy vọng	57	46	11
+Hài hước	63	50	13
+Hàn Quốc	63	50	13
+Hát	73	58	15
+Hâm mộ	27	22	5
+Hôi	57	46	11
+Hôm nay	11	9	2
+Hư	59	47	12
+Hẹp	74	59	15
+Họ	23	18	5
+Họ hàng	69	55	14
+Học	56	45	11
+Học sinh	57	46	11
+Hứa	57	46	11
+Kem	58	46	12
+Khai báo	23	18	5
+Khoe khoang	58	46	12
+Khu cách ly	4	3	1
+Khám bệnh	54	43	11
+Khó	57	46	11
+Khóc	86	69	17
+Khô	58	46	12
+Không cho	61	49	12
+Không cần	58	46	12
+Không nghe lời	55	44	11
+Không nên	65	52	13
+Không quen	58	46	12
+Khăn quàng cổ	55	44	11
+Khẩu trang	5	4	1
+Khỏe	56	45	11
+Kính lúp	58	46	12
+Kẹo	62	50	12
+Kẹp tóc	58	46	12
+Kế toán	54	43	11
+Kết hôn	15	12	3
+Laptop	62	50	12
+Lo lắng	3	2	1
+Luật sư	55	44	11
+Làm bài tập	62	50	12
+Làm việc	79	63	16
+Lây bệnh	26	21	5
+Lùn	59	47	12
+Lười biếng	66	53	13
+Lạnh	78	62	16
+Lễ tân	67	54	13
+Mua	19	15	4
+Mua bán	58	46	12
+Muốn	78	62	16
+Màu cam	59	47	12
+Màu hồng	62	50	12
+Màu nâu	72	58	14
+Màu trắng	56	45	11
+Màu tím	60	48	12
+Màu vàng	73	58	15
+Màu xanh da trời	57	46	11
+Màu xanh lá cây	60	48	12
+Màu đen	56	45	11
+Màu đỏ	60	48	12
+Mách	58	46	12
+Mát mẻ	57	46	11
+Máy bay	56	45	11
+Máy chiếu	60	48	12
+Máy giặt	75	60	15
+Máy tính cầm tay	60	48	12
+Máy điều hòa	72	58	14
+Mì gói	61	49	12
+Mùa hè	93	74	19
+Mùa khô	66	53	13
+Mùa mưa	59	47	12
+Mùa thu	70	56	14
+Mùa xuân	61	49	12
+Mùa đông	72	58	14
+Múa	56	45	11
+Mũ	54	43	11
+Mũ bảo hiểm	60	48	12
+Mưa	59	47	12
+Mạnh	57	46	11
+Mập	45	36	9
+Mặn	59	47	12
+Mẹ	57	46	11
+Mềm	62	50	12
+Mền	66	53	13
+Mệt	56	45	11
+Mới	57	46	11
+Mời vào	25	20	5
+Mỹ	60	48	12
+Nghe	108	86	22
+Nghèo	60	48	12
+Nghề nghiệp	78	62	16
+Nghỉ ngơi	87	70	17
+Ngoan	61	49	12
+Ngon miệng	56	45	11
+Ngu ngốc	57	46	11
+Ngày	89	71	18
+Ngày Nhà giáo Việt Nam	73	58	15
+Ngày Quốc tế Lao động	60	48	12
+Ngày Quốc tế Phụ nữ	69	55	14
+Ngày Quốc tế Thiếu nhi	57	46	11
+Ngân hàng	65	52	13
+Ngón tay	3	2	1
+Ngắn	66	53	13
+Ngọt	69	55	14
+Ngủ	58	46	12
+Ngửi	59	47	12
+Nhanh	64	51	13
+Nhà	96	77	19
+Nhà hàng	64	51	13
+Nhà sách	64	51	13
+Nhà trọ	64	51	13
+Nhân viên phục vụ	53	42	11
+Nhân viên văn phòng	54	43	11
+Nhìn	26	21	5
+Nhạt	70	56	14
+Nhảy cao	61	49	12
+Nhảy dây	62	50	12
+Nhầm	3	2	1
+Nhầm lẫn	57	46	11
+Nhật Bản	61	49	12
+Nhẹ	85	68	17
+Nhớ	25	20	5
+Nên	71	57	14
+Nói	72	58	14
+Nói chuyện	56	45	11
+Nói xấu	31	25	6
+Nóng	56	45	11
+Nôn ói	18	14	4
+Nông dân	56	45	11
+Năm	56	45	11
+Nước	58	46	12
+Nướng	58	46	12
+Nấu	56	45	11
+Nắng	87	70	17
+Nặng	99	79	20
+Nếm	62	50	12
+Nồi cơm điện	69	55	14
+Phía sau	34	27	7
+Phút	59	47	12
+Phơi đồ	65	52	13
+Phạt	19	15	4
+Phỏng vấn	18	14	4
+Phở	57	46	11
+Phục hồi	3	2	1
+Quan sát	57	46	11
+Quen	57	46	11
+Quán cà phê	64	51	13
+Quạt (đứng)	75	60	15
+Quả bơ	58	46	12
+Quả cam	56	45	11
+Quả chuối	56	45	11
+Quả dâu	58	46	12
+Quả dứa	58	46	12
+Quả dừa	57	46	11
+Quả mận	63	50	13
+Quả xoài	58	46	12
+Quả đu đủ	58	46	12
+Quả đào	58	46	12
+Quả địa cầu	61	49	12
+Quần thun	56	45	11
+Quần tây	56	45	11
+Quần đùi	11	9	2
+Rau	38	30	8
+Rượu	57	46	11
+Rạp chiếu phim	66	53	13
+Rẻ	57	46	11
+Rẽ phải	7	6	1
+Rẽ trái	33	26	7
+Rộng	67	54	13
+Rửa chén	60	48	12
+Rửa mặt	56	45	11
+Rửa tay	81	65	16
+Sai	57	46	11
+San sẻ	24	19	5
+Sinh viên	54	43	11
+Siêu thị	64	51	13
+Sách	61	49	12
+Sáng tạo	57	46	11
+Sạch sẽ	58	46	12
+Sốt	4	3	1
+Sớm	67	54	13
+Sử dụng	29	23	6
+Sữa	59	47	12
+Taxi	74	59	15
+Tham lam	63	50	13
+Tham ăn	62	50	12
+Thay đổi	58	46	12
+Thuyền	55	44	11
+Thành phố	65	52	13
+Thái Lan	60	48	12
+Tháng	59	47	12
+Tháng ba	60	48	12
+Tháng bảy	59	47	12
+Tháng chín	59	47	12
+Tháng hai	62	50	12
+Tháng mười	66	53	13
+Tháng mười hai	64	51	13
+Tháng mười một	63	50	13
+Tháng một	61	49	12
+Tháng năm	60	48	12
+Tháng sáu	61	49	12
+Tháng tám	58	46	12
+Tháng tư	59	47	12
+Thèm	61	49	12
+Thích	81	65	16
+Thông minh	61	49	12
+Thú vị	73	58	15
+Thăm	7	6	1
+Thơm	82	66	16
+Thư ký	53	42	11
+Thương	3	2	1
+Thước kẻ	61	49	12
+Thấp (đồ vật)	52	42	10
+Thất lạc	9	7	2
+Thể dục (thể thao)	57	46	11
+Thịt	56	45	11
+Thời gian	61	49	12
+Thời tiết	64	51	13
+Thứ ba	63	50	13
+Thứ bảy	59	47	12
+Thứ hai	64	51	13
+Thứ năm	60	48	12
+Thứ sáu	70	56	14
+Thứ tư	63	50	13
+Thức dậy	108	86	22
+Thức ăn	26	21	5
+Thử	56	45	11
+Tivi	72	58	14
+Tiếp tục	71	57	14
+Trung Quốc	62	50	12
+Trung thu	63	50	13
+Trà	58	46	12
+Trưa	24	19	5
+Trường Cao đẳng	57	46	11
+Trường học	96	77	19
+Trường Đại học	68	54	14
+Trẻ	58	46	12
+Trễ	60	48	12
+Trứng	63	50	13
+Trực thăng	55	44	11
+Tàu hỏa	71	57	14
+Tìm	57	46	11
+Tôi	27	22	5
+Túi xách	54	43	11
+Tường	67	54	13
+Tập luyện	6	5	1
+Tắm rửa	57	46	11
+Tết Âm lịch	58	46	12
+Tỉnh	72	58	14
+Tối	13	10	3
+Tốt bụng	56	45	11
+Tủ lạnh	68	54	14
+Từ chối	71	57	14
+Uống	69	55	14
+Virus	3	2	1
+Viên phấn	57	46	11
+Viết	54	43	11
+Việt Nam	60	48	12
+Vâng lời	59	47	12
+Vòng tay	58	46	12
+Võ	57	46	11
+Vở	63	50	13
+Vợ	66	53	13
+Xa	92	74	18
+Xe buýt	55	44	11
+Xe máy	58	46	12
+Xe tải	56	45	11
+Xe đạp	64	51	13
+Xem	70	56	14
+Xin	59	47	12
+Xin lỗi	69	55	14
+Xin phép	14	11	3
+Xuất viện	25	20	5
+Xôi	75	60	15
+Xúc động	30	24	6
+Xấu (người)	58	46	12
+Xấu (vật)	56	45	11
+Y tá	55	44	11
+Yên tĩnh	61	49	12
+Yêu thương	54	43	11
+Yếu	56	45	11
+Áo sơ mi	54	43	11
+Áo thun	55	44	11
+Áo đầm	55	44	11
+Áp dụng	33	26	7
+Ô tô	74	59	15
+Ông ngoại	66	53	13
+Ông nội	67	54	13
+Ăn	86	69	17
+Ăn mừng	31	25	6
+Đau	72	58	14
+Đi	87	70	17
+Điền kinh	57	46	11
+Điện thoại	57	46	11
+Đá cầu	62	50	12
+Đâu	24	19	5
+Đúng	56	45	11
+Đầu	23	18	5
+Đầu bếp	55	44	11
+Đậm	57	46	11
+Đắng	57	46	11
+Đắt	58	46	12
+Đẹp (người)	72	58	14
+Đẹp (vật)	62	50	12
+Đọc	57	46	11
+Đồ buộc tóc	56	45	11
+Đồ dùng	67	54	13
+Đồng hồ đeo tay	66	53	13
+Đồng ý	82	66	16
+Ướt	86	69	17
+Ấm	55	44	11
+Ốm	58	46	12
+Ồn ào	63	50	13
+Ủng hộ	4	3	1

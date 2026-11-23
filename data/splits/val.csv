@@ -1,0 +1,31 @@
+﻿sample_id,video_path,label,class_id,signer_id,source,split,is_augmented,parent_sample_id,aug_type,fps,num_frames,duration_sec,width,height,is_valid
+vsl2_con_cho_002347,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/test/Con chó/002347.mp4,con chó,23,vsl2_signer_003,kaggle_vsl_v2,val,False,,,25.0,56,2.24,224,224,True
+vsl2_gao_001949,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/test/Gạo/001949.mp4,gạo,21,vsl2_signer_003,kaggle_vsl_v2,val,False,,,25.0,60,2.4,224,224,True
+vsl2_ong_noi_002422,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/test/Ông nội/002422.mp4,ông nội,11,vsl2_signer_003,kaggle_vsl_v2,val,False,,,25.0,58,2.32,224,224,True
+vsl2_buoi_sang_001895,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Buổi sáng/001895.mp4,buổi sáng,26,vsl2_signer_003,kaggle_vsl_v2,val,False,,,25.0,59,2.36,224,224,True
+vsl2_buoi_trua_001897,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Buổi trưa/001897.mp4,buổi trưa,27,vsl2_signer_003,kaggle_vsl_v2,val,False,,,25.0,64,2.56,224,224,True
+vsl2_buoi_toi_001901,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Buổi tối/001901.mp4,buổi tối,28,vsl2_signer_003,kaggle_vsl_v2,val,False,,,25.0,65,2.6,224,224,True
+vsl2_chi_001704,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Chị/001704.mp4,chị,10,vsl2_signer_003,kaggle_vsl_v2,val,False,,,25.0,72,2.88,224,224,True
+vsl2_con_meo_002349,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Con mèo/002349.mp4,con mèo,24,vsl2_signer_003,kaggle_vsl_v2,val,False,,,25.0,55,2.2,224,224,True
+vsl2_cong_vien_001783,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Công viên/001783.mp4,công viên,25,vsl2_signer_003,kaggle_vsl_v2,val,False,,,25.0,66,2.64,224,224,True
+vsl2_doi_002447,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Dỗi/002447.mp4,dỗi,9,vsl2_signer_003,kaggle_vsl_v2,val,False,,,25.0,56,2.24,224,224,True
+vsl2_giup_do_002216,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Giúp đỡ/002216.mp4,giúp đỡ,0,vsl2_signer_003,kaggle_vsl_v2,val,False,,,25.0,62,2.48,224,224,True
+vsl2_hua_002200,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Hứa/002200.mp4,hứa,4,vsl2_signer_003,kaggle_vsl_v2,val,False,,,25.0,56,2.24,224,224,True
+vsl2_khong_cho_002489,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Không cho/002489.mp4,không cho,6,vsl2_signer_003,kaggle_vsl_v2,val,False,,,25.0,46,1.84,224,224,True
+vsl2_khong_nen_002485,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Không nên/002485.mp4,không nên,5,vsl2_signer_003,kaggle_vsl_v2,val,False,,,25.0,63,2.52,224,224,True
+vsl2_khong_quen_002483,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Không quen/002483.mp4,không quen,7,vsl2_signer_003,kaggle_vsl_v2,val,False,,,25.0,69,2.76,224,224,True
+vsl2_keo_001968,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Kẹo/001968.mp4,kẹo,20,vsl2_signer_003,kaggle_vsl_v2,val,False,,,25.0,67,2.68,224,224,True
+vsl2_muon_002146,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Muốn/002146.mp4,muốn,1,vsl2_signer_003,kaggle_vsl_v2,val,False,,,25.0,63,2.52,224,224,True
+vsl2_mua_he_001811,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Mùa hè/001811.mp4,mùa hè,29,vsl2_signer_003,kaggle_vsl_v2,val,False,,,25.0,57,2.28,224,224,True
+vsl2_moi_002303,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Mới/002303.mp4,mới,15,vsl2_signer_003,kaggle_vsl_v2,val,False,,,25.0,55,2.2,224,224,True
+vsl2_pho_001958,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Phở/001958.mp4,phở,17,vsl2_signer_003,kaggle_vsl_v2,val,False,,,25.0,65,2.6,224,224,True
+vsl2_qua_dua_002407,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Quả dừa/002407.mp4,quả dừa,22,vsl2_signer_003,kaggle_vsl_v2,val,False,,,25.0,51,2.04,224,224,True
+vsl2_sua_001989,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Sữa/001989.mp4,sữa,18,vsl2_signer_003,kaggle_vsl_v2,val,False,,,25.0,60,2.4,224,224,True
+vsl2_thong_minh_002331,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Thông minh/002331.mp4,thông minh,13,vsl2_signer_003,kaggle_vsl_v2,val,False,,,25.0,49,1.96,224,224,True
+vsl2_thom_002250,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Thơm/002250.mp4,thơm,14,vsl2_signer_003,kaggle_vsl_v2,val,False,,,25.0,64,2.56,224,224,True
+vsl2_tiep_tuc_002180,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Tiếp tục/002180.mp4,tiếp tục,2,vsl2_signer_003,kaggle_vsl_v2,val,False,,,25.0,66,2.64,224,224,True
+vsl2_trung_001964,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Trứng/001964.mp4,trứng,19,vsl2_signer_003,kaggle_vsl_v2,val,False,,,25.0,60,2.4,224,224,True
+vsl2_tu_choi_002193,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Từ chối/002193.mp4,từ chối,3,vsl2_signer_003,kaggle_vsl_v2,val,False,,,25.0,70,2.8,224,224,True
+vsl2_xem_002435,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Xem/002435.mp4,xem,8,vsl2_signer_003,kaggle_vsl_v2,val,False,,,25.0,50,2.0,224,224,True
+vsl2_yeu_002299,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Yếu/002299.mp4,yếu,16,vsl2_signer_003,kaggle_vsl_v2,val,False,,,25.0,59,2.36,224,224,True
+vsl2_ong_ngoai_002427,data/raw/kaggle_vsl_v2/processed/processed/frame_splited/train/Ông ngoại/002427.mp4,ông ngoại,12,vsl2_signer_003,kaggle_vsl_v2,val,False,,,25.0,66,2.64,224,224,True

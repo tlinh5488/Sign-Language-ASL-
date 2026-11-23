@@ -1,0 +1,15 @@
+{
+  "mode": "kaggle_only",
+  "input_train_manifest": "data\\splits\\train.csv",
+  "output_manifest": "data\\splits\\train_augmented.csv",
+  "output_video_dir": "data\\augmented\\train",
+  "random_seed": 42,
+  "allow_hflip": false,
+  "num_augmentations_per_video": 2,
+  "original_train_samples": 150,
+  "generated_augmented_samples": 300,
+  "total_train_augmented_samples": 450,
+  "skipped_invalid_samples": 0,
+  "failed_videos": [],
+  "train_only_guard_passed": true
+}

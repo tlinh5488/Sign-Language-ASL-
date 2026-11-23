@@ -1,0 +1,124 @@
+# Central configuration for Quy's VSL Data Pipeline (Phần 1: Dữ liệu)
+# Covers all 4 stages:
+#   1. Chọn phạm vi (Scope selection)
+#   2. Thu thập & nhãn - tự quay, nhiều người + Kaggle VSL ingestion & manifest audit
+#   3. Chia tập dữ liệu - chia theo người (Signer-disjoint train/val/test split)
+#   4. Tăng cường - chỉ trên tập train (Train-only sign-language-safe augmentation)
+
+project:
+  name: "vsl-vietnamese-sign-language-data-pipeline"
+  language: "vi"
+  root_dir: "."
+
+paths:
+  raw_kaggle_dir: "data/raw/kaggle_vsl"
+  raw_kaggle_v2_dir: "data/raw/kaggle_vsl_v2"
+  raw_self_dir: "data/raw/self_recorded"
+  manifests_dir: "data/manifests"
+  kaggle_manifest: "data/manifests/kaggle_manifest.csv"
+  kaggle_v2_manifest: "data/manifests/kaggle_v2_manifest.csv"
+  self_manifest: "data/manifests/self_manifest.csv"
+  dataset_manifest: "data/manifests/dataset_manifest.csv"
+  scoped_manifest: "data/manifests/scoped_manifest.csv"
+  scope_report: "data/manifests/scope_report.json"
+  quality_report: "data/manifests/quality_report.json"
+  splits_dir: "data/splits"
+  train_manifest: "data/splits/train.csv"
+  val_manifest: "data/splits/val.csv"
+  test_manifest: "data/splits/test.csv"
+  train_augmented_manifest: "data/splits/train_augmented.csv"
+  split_report: "data/splits/split_report.json"
+  augmented_train_dir: "data/augmented/train"
+  class_list_path: "configs/class_list.json"
+
+kaggle:
+  dataset_slug: "aresusayhi/vsl-vietnamese-sign-languages"
+  source_name: "kaggle_vsl"
+  labels_rel_path: "Dataset/Labels/label.csv"
+  videos_rel_dir: "Dataset/Videos"
+  id_column: "ID"
+  video_column: "VIDEO"
+  label_column: "LABEL"
+  # QIPEDC filenames use regional suffix before .mp4: B (Bắc), N (Nam), T (Trung)
+  region_suffix_map:
+    B: "kaggle_signer_north"
+    N: "kaggle_signer_south"
+    T: "kaggle_signer_central"
+  default_signer_prefix: "kaggle_signer_common"
+
+# Secondary public Kaggle VSL dataset for multi-signer diversity & scale
+# 472 glosses, 26,446 canonical front-view cropped clips (VSL400 + online, CC BY 4.0)
+# 151 overlapping glosses with QIPEDC; all 30 curated classes in class_list.json
+# overlap both datasets (55-93 clips/class in VSL-v2 + 3 B/T/N clips/class in QIPEDC).
+kaggle_v2:
+  dataset_slug: "nguyenanfms/vsl-vietnamese-sign-language-v2"
+  source_name: "kaggle_vsl_v2"
+  license: "CC BY 4.0"
+  split_manifest_rel_path: "processed/processed/frame_splited/split_manifest.tsv"
+  frame_splited_rel_dir: "processed/processed/frame_splited"
+  raw_vsl400_rel_dir: "raw/raw/VSL400"
+  prefer_processed_front_view: true
+  exclude_pre_augmented: true
+  default_signer_prefix: "vsl2_signer"
+
+scope:
+  # Supported modes: "class_list", "top_k", "min_samples", "all"
+  mode: "class_list"
+  class_list_path: "configs/class_list.json"
+  top_k: 30
+  min_samples_per_class: 1
+  min_signers_per_class: 1
+  # Default (Phương án 1): 100% Dual Kaggle VSL (QIPEDC + VSL-v2, no self-recording).
+  # Keeps only sources in KAGGLE_SOURCES and enforces >=3 samples & >=3 distinct
+  # signers per class for 3-way signer-disjoint split. Set false (or pass --hybrid)
+  # to include self-recorded webcam videos.
+  kaggle_only: true
+  kaggle_only_min_samples_per_class: 3
+  kaggle_only_min_signers_per_class: 3
+  case_insensitive_match: true
+  normalize_whitespace: true
+  only_valid_videos: true
+  export_generated_class_list: false
+
+recording:
+  fps: 30
+  duration_sec: 2.5
+  countdown_sec: 3
+  width: 640
+  height: 480
+  camera_index: 0
+  codec: "mp4v"
+  min_signers_recommended: 5
+  takes_per_signer_per_class: 3
+  min_duration_sec: 0.3
+  max_duration_sec: 10.0
+  imbalance_ratio_warning: 3.0
+
+split:
+  group_by: "signer_id"
+  train_ratio: 0.70
+  val_ratio: 0.15
+  test_ratio: 0.15
+  random_seed: 42
+  strict_no_leakage: true
+  min_unique_signers: 3
+  only_valid_videos: true
+
+augmentation:
+  enabled: true
+  train_only: true
+  random_seed: 42
+  num_augments_per_sample: 2
+  kaggle_only_num_augments_per_sample: 4
+  # IMPORTANT: Horizontal flip is FALSE by default because asymmetric VSL signs
+  # depend on dominant-hand handedness and spatial directionality.
+  allow_hflip: false
+  speed_range: [0.85, 1.15]
+  temporal_trim_max_ratio: 0.08
+  rotation_deg_range: [-8.0, 8.0]
+  scale_range: [0.92, 1.08]
+  translate_ratio_range: [-0.04, 0.04]
+  brightness_delta_range: [-20.0, 20.0]
+  contrast_range: [0.88, 1.12]
+  gaussian_noise_std: 4.0
+  codec: "mp4v"

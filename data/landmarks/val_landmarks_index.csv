@@ -1,0 +1,6 @@
+sample_id,landmark_path,video_path,label,class_id,signer_id,split,is_augmented,num_frames,fps,hand_detect_ratio,left_hand_detect_ratio,right_hand_detect_ratio,pose_detect_ratio,face_detect_ratio,status,error
+val_vsl2_signer_003_c00_orig,val/0/val_vsl2_signer_003_c00_orig.npz,data/demo/raw/val_vsl2_signer_003_c00_orig.mp4,giúp đỡ,0,vsl2_signer_003,val,False,64,30.0,0.9375,0.9375,0.8906,1.0,1.0,ok,
+val_vsl2_signer_003_c01_orig,val/1/val_vsl2_signer_003_c01_orig.npz,data/demo/raw/val_vsl2_signer_003_c01_orig.mp4,muốn,1,vsl2_signer_003,val,False,28,30.0,0.8571,0.8571,0.75,1.0,1.0,ok,
+val_vsl2_signer_003_c02_orig,val/2/val_vsl2_signer_003_c02_orig.npz,data/demo/raw/val_vsl2_signer_003_c02_orig.mp4,tiếp tục,2,vsl2_signer_003,val,False,36,30.0,0.8889,0.8889,0.8056,1.0,1.0,ok,
+val_vsl2_signer_003_c03_orig,val/3/val_vsl2_signer_003_c03_orig.npz,data/demo/raw/val_vsl2_signer_003_c03_orig.mp4,từ chối,3,vsl2_signer_003,val,False,44,30.0,0.9091,0.9091,0.8409,1.0,1.0,ok,
+val_vsl2_signer_003_c04_orig,val/4/val_vsl2_signer_003_c04_orig.npz,data/demo/raw/val_vsl2_signer_003_c04_orig.mp4,hứa,4,vsl2_signer_003,val,False,52,30.0,0.9231,0.9231,0.8654,1.0,1.0,ok,
