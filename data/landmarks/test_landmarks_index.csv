@@ -1,6 +1,0 @@
-sample_id,landmark_path,video_path,label,class_id,signer_id,split,is_augmented,num_frames,fps,hand_detect_ratio,left_hand_detect_ratio,right_hand_detect_ratio,pose_detect_ratio,face_detect_ratio,status,error
-test_kaggle_signer_south_c00_orig,test/0/test_kaggle_signer_south_c00_orig.npz,data/demo/raw/test_kaggle_signer_south_c00_orig.mp4,giúp đỡ,0,kaggle_signer_south,test,False,28,30.0,0.8571,0.8571,0.75,1.0,1.0,ok,
-test_kaggle_signer_south_c01_orig,test/1/test_kaggle_signer_south_c01_orig.npz,data/demo/raw/test_kaggle_signer_south_c01_orig.mp4,muốn,1,kaggle_signer_south,test,False,36,30.0,0.8889,0.8889,0.8056,1.0,1.0,ok,
-test_kaggle_signer_south_c02_orig,test/2/test_kaggle_signer_south_c02_orig.npz,data/demo/raw/test_kaggle_signer_south_c02_orig.mp4,tiếp tục,2,kaggle_signer_south,test,False,44,30.0,0.9091,0.9091,0.8409,1.0,1.0,ok,
-test_kaggle_signer_south_c03_orig,test/3/test_kaggle_signer_south_c03_orig.npz,data/demo/raw/test_kaggle_signer_south_c03_orig.mp4,từ chối,3,kaggle_signer_south,test,False,52,30.0,0.9231,0.9231,0.8654,1.0,1.0,ok,
-test_kaggle_signer_south_c04_orig,test/4/test_kaggle_signer_south_c04_orig.npz,data/demo/raw/test_kaggle_signer_south_c04_orig.mp4,hứa,4,kaggle_signer_south,test,False,64,30.0,0.9375,0.9375,0.8906,1.0,1.0,ok,

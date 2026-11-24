@@ -6,9 +6,9 @@
   "random_seed": 42,
   "allow_hflip": false,
   "num_augmentations_per_video": 2,
-  "original_train_samples": 150,
-  "generated_augmented_samples": 300,
-  "total_train_augmented_samples": 450,
+  "original_train_samples": 1417,
+  "generated_augmented_samples": 2834,
+  "total_train_augmented_samples": 4251,
   "skipped_invalid_samples": 0,
   "failed_videos": [],
   "train_only_guard_passed": true

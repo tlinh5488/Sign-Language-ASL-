@@ -1,0 +1,458 @@
+{
+  "schema_version": "1.0",
+  "total_verified_clips": 2020,
+  "total_valid_clips": 2020,
+  "total_classes": 30,
+  "total_verified_unique_signers": 31,
+  "unverified_online_clips_included": 0,
+  "raw_disk_usage": {
+    "kaggle_vsl_mp4_count": 90,
+    "kaggle_vsl_mp4_mb": 47.13,
+    "kaggle_vsl_v2_mp4_count": 1930,
+    "kaggle_vsl_v2_mp4_mb": 222.79,
+    "total_raw_mp4_count": 2020,
+    "total_raw_mp4_mb": 269.92,
+    "total_data_raw_dir_mb": 278.23
+  },
+  "per_class_clip_stats": {
+    "combined_min": 58,
+    "combined_max": 96,
+    "combined_mean": 67.33,
+    "kaggle_vsl_v2_min": 55,
+    "kaggle_vsl_v2_max": 93,
+    "kaggle_vsl_v2_mean": 64.33,
+    "kaggle_vsl_per_class": 3
+  },
+  "sources": {
+    "kaggle_vsl": {
+      "dataset_slug": "aresusayhi/vsl-vietnamese-sign-languages",
+      "verification_method": "Direct visual face/appearance inspection of mid-frame contact sheets and zoomed face crops across all 90 in-scope 720p QIPEDC videos, plus cross-variant pixel MAD duplicate analysis.",
+      "signer_map_path": "configs/qipedc_signer_map.json",
+      "num_clips": 90,
+      "num_verified_signers": 5,
+      "actor_profiles": {
+        "qipedc_signer_01": "Female demonstrator, dark hair side-parted or high top bun (W01743B), no glasses (32 clips across 20 classes: 20 B, 7 T, 5 N)",
+        "qipedc_signer_02": "Male demonstrator, short cropped hair or shaved head (D0103/D0165), no glasses (16 clips across 10 classes: 10 B, 4 T, 2 N)",
+        "qipedc_signer_03": "Young male demonstrator, fuller swept-over dark hair, no glasses (33 clips across 20 classes: 0 B, 13 T, 20 N)",
+        "qipedc_signer_04": "Female demonstrator with bangs and round glasses (5 clips across 4 classes: 0 B, 4 T, 1 N)",
+        "qipedc_signer_05": "Young male demonstrator with rectangular glasses (4 clips across 2 classes: 0 B, 2 T, 2 N)"
+      },
+      "signers": [
+        {
+          "signer_id": "qipedc_signer_01",
+          "num_clips": 32,
+          "num_classes_covered": 20
+        },
+        {
+          "signer_id": "qipedc_signer_02",
+          "num_clips": 16,
+          "num_classes_covered": 10
+        },
+        {
+          "signer_id": "qipedc_signer_03",
+          "num_clips": 33,
+          "num_classes_covered": 20
+        },
+        {
+          "signer_id": "qipedc_signer_04",
+          "num_clips": 5,
+          "num_classes_covered": 4
+        },
+        {
+          "signer_id": "qipedc_signer_05",
+          "num_clips": 4,
+          "num_classes_covered": 2
+        }
+      ],
+      "near_identical_re_watermarked_duplicate_pairs_count": 26,
+      "all_duplicates_grouped_under_same_signer": true,
+      "near_identical_duplicate_pairs": [
+        {
+          "label": "buổi sáng",
+          "video_a": "W00368N.mp4",
+          "video_b": "W00368T.mp4",
+          "verified_signer_a": "qipedc_signer_03",
+          "verified_signer_b": "qipedc_signer_03",
+          "same_verified_signer": true,
+          "mid_frame_mad": 0.1893
+        },
+        {
+          "label": "buổi trưa",
+          "video_a": "W00370B.mp4",
+          "video_b": "W00370T.mp4",
+          "verified_signer_a": "qipedc_signer_01",
+          "verified_signer_b": "qipedc_signer_01",
+          "same_verified_signer": true,
+          "mid_frame_mad": 1.4417
+        },
+        {
+          "label": "buổi tối",
+          "video_a": "W00369N.mp4",
+          "video_b": "W00369T.mp4",
+          "verified_signer_a": "qipedc_signer_03",
+          "verified_signer_b": "qipedc_signer_03",
+          "same_verified_signer": true,
+          "mid_frame_mad": 0.1554
+        },
+        {
+          "label": "chị",
+          "video_a": "W00570B.mp4",
+          "video_b": "W00570T.mp4",
+          "verified_signer_a": "qipedc_signer_01",
+          "verified_signer_b": "qipedc_signer_01",
+          "same_verified_signer": true,
+          "mid_frame_mad": 0.147
+        },
+        {
+          "label": "con chó",
+          "video_a": "W00739N.mp4",
+          "video_b": "W00739T.mp4",
+          "verified_signer_a": "qipedc_signer_03",
+          "verified_signer_b": "qipedc_signer_03",
+          "same_verified_signer": true,
+          "mid_frame_mad": 0.1854
+        },
+        {
+          "label": "con mèo",
+          "video_a": "W00772N.mp4",
+          "video_b": "W00772T.mp4",
+          "verified_signer_a": "qipedc_signer_03",
+          "verified_signer_b": "qipedc_signer_03",
+          "same_verified_signer": true,
+          "mid_frame_mad": 0.1662
+        },
+        {
+          "label": "công viên",
+          "video_a": "W00850N.mp4",
+          "video_b": "W00850T.mp4",
+          "verified_signer_a": "qipedc_signer_03",
+          "verified_signer_b": "qipedc_signer_03",
+          "same_verified_signer": true,
+          "mid_frame_mad": 0.1531
+        },
+        {
+          "label": "dỗi",
+          "video_a": "D0271N.mp4",
+          "video_b": "D0271T.mp4",
+          "verified_signer_a": "qipedc_signer_01",
+          "verified_signer_b": "qipedc_signer_01",
+          "same_verified_signer": true,
+          "mid_frame_mad": 0.1403
+        },
+        {
+          "label": "giúp đỡ",
+          "video_a": "W01497N.mp4",
+          "video_b": "W01497T.mp4",
+          "verified_signer_a": "qipedc_signer_03",
+          "verified_signer_b": "qipedc_signer_03",
+          "same_verified_signer": true,
+          "mid_frame_mad": 0.1509
+        },
+        {
+          "label": "gạo",
+          "video_a": "W01384N.mp4",
+          "video_b": "W01384T.mp4",
+          "verified_signer_a": "qipedc_signer_03",
+          "verified_signer_b": "qipedc_signer_03",
+          "same_verified_signer": true,
+          "mid_frame_mad": 0.1546
+        },
+        {
+          "label": "hứa",
+          "video_a": "D0165N.mp4",
+          "video_b": "D0165T.mp4",
+          "verified_signer_a": "qipedc_signer_02",
+          "verified_signer_b": "qipedc_signer_02",
+          "same_verified_signer": true,
+          "mid_frame_mad": 0.1663
+        },
+        {
+          "label": "không cho",
+          "video_a": "D0033N.mp4",
+          "video_b": "D0033T.mp4",
+          "verified_signer_a": "qipedc_signer_01",
+          "verified_signer_b": "qipedc_signer_01",
+          "same_verified_signer": true,
+          "mid_frame_mad": 0.1059
+        },
+        {
+          "label": "không quen",
+          "video_a": "D0109B.mp4",
+          "video_b": "D0109T.mp4",
+          "verified_signer_a": "qipedc_signer_01",
+          "verified_signer_b": "qipedc_signer_01",
+          "same_verified_signer": true,
+          "mid_frame_mad": 0.1494
+        },
+        {
+          "label": "kẹo",
+          "video_a": "W01743N.mp4",
+          "video_b": "W01743T.mp4",
+          "verified_signer_a": "qipedc_signer_03",
+          "verified_signer_b": "qipedc_signer_03",
+          "same_verified_signer": true,
+          "mid_frame_mad": 0.0894
+        },
+        {
+          "label": "muốn",
+          "video_a": "W02221N.mp4",
+          "video_b": "W02221T.mp4",
+          "verified_signer_a": "qipedc_signer_03",
+          "verified_signer_b": "qipedc_signer_03",
+          "same_verified_signer": true,
+          "mid_frame_mad": 0.1761
+        },
+        {
+          "label": "mới",
+          "video_a": "W02264N.mp4",
+          "video_b": "W02264T.mp4",
+          "verified_signer_a": "qipedc_signer_03",
+          "verified_signer_b": "qipedc_signer_03",
+          "same_verified_signer": true,
+          "mid_frame_mad": 0.2887
+        },
+        {
+          "label": "phở",
+          "video_a": "W02696N.mp4",
+          "video_b": "W02696T.mp4",
+          "verified_signer_a": "qipedc_signer_03",
+          "verified_signer_b": "qipedc_signer_03",
+          "same_verified_signer": true,
+          "mid_frame_mad": 0.1484
+        },
+        {
+          "label": "quả dừa",
+          "video_a": "W02732N.mp4",
+          "video_b": "W02732T.mp4",
+          "verified_signer_a": "qipedc_signer_03",
+          "verified_signer_b": "qipedc_signer_03",
+          "same_verified_signer": true,
+          "mid_frame_mad": 0.0893
+        },
+        {
+          "label": "sữa",
+          "video_a": "W03042B.mp4",
+          "video_b": "W03042T.mp4",
+          "verified_signer_a": "qipedc_signer_02",
+          "verified_signer_b": "qipedc_signer_02",
+          "same_verified_signer": true,
+          "mid_frame_mad": 0.1422
+        },
+        {
+          "label": "thông minh",
+          "video_a": "W03288N.mp4",
+          "video_b": "W03288T.mp4",
+          "verified_signer_a": "qipedc_signer_03",
+          "verified_signer_b": "qipedc_signer_03",
+          "same_verified_signer": true,
+          "mid_frame_mad": 0.1447
+        },
+        {
+          "label": "thơm",
+          "video_a": "W03314N.mp4",
+          "video_b": "W03314T.mp4",
+          "verified_signer_a": "qipedc_signer_05",
+          "verified_signer_b": "qipedc_signer_05",
+          "same_verified_signer": true,
+          "mid_frame_mad": 0.1041
+        },
+        {
+          "label": "tiếp tục",
+          "video_a": "W03421N.mp4",
+          "video_b": "W03421T.mp4",
+          "verified_signer_a": "qipedc_signer_05",
+          "verified_signer_b": "qipedc_signer_05",
+          "same_verified_signer": true,
+          "mid_frame_mad": 0.0869
+        },
+        {
+          "label": "từ chối",
+          "video_a": "D0103N.mp4",
+          "video_b": "D0103T.mp4",
+          "verified_signer_a": "qipedc_signer_02",
+          "verified_signer_b": "qipedc_signer_02",
+          "same_verified_signer": true,
+          "mid_frame_mad": 0.1649
+        },
+        {
+          "label": "xem",
+          "video_a": "D0192N.mp4",
+          "video_b": "D0192T.mp4",
+          "verified_signer_a": "qipedc_signer_01",
+          "verified_signer_b": "qipedc_signer_01",
+          "same_verified_signer": true,
+          "mid_frame_mad": 0.1421
+        },
+        {
+          "label": "yếu",
+          "video_a": "W04059N.mp4",
+          "video_b": "W04059T.mp4",
+          "verified_signer_a": "qipedc_signer_04",
+          "verified_signer_b": "qipedc_signer_04",
+          "same_verified_signer": true,
+          "mid_frame_mad": 0.1264
+        },
+        {
+          "label": "ông ngoại",
+          "video_a": "W02575B.mp4",
+          "video_b": "W02575T.mp4",
+          "verified_signer_a": "qipedc_signer_02",
+          "verified_signer_b": "qipedc_signer_02",
+          "same_verified_signer": true,
+          "mid_frame_mad": 0.1938
+        }
+      ],
+      "split_recommendation": "Assign all 5 QIPEDC actors to train split because individual QIPEDC actors only cover subsets of classes (2-21/30) and include 26 re-watermarked duplicate pairs; keeping val and test 100% on multi-signer VSL-v2 guarantees identical val/test domain distribution and zero duplicate/actor leakage."
+    },
+    "kaggle_vsl_v2": {
+      "dataset_slug": "nguyenanfms/vsl-vietnamese-sign-language-v2",
+      "verification_method": "Ground-truth VSL400 Part_1..Part_7 front_view.json video_id -> signer_id mapping; require_verified_signer=true (0 unmapped online clips).",
+      "front_view_json_files": [
+        "raw/raw/VSL400/Part_1/split_1/front_view.json",
+        "raw/raw/VSL400/Part_2/split_2/front_view.json",
+        "raw/raw/VSL400/Part_3/split_3/front_view.json",
+        "raw/raw/VSL400/Part_4/split_4/front_view.json",
+        "raw/raw/VSL400/Part_5/split_5/front_view.json",
+        "raw/raw/VSL400/Part_6/split_6/front_view.json",
+        "raw/raw/VSL400/Part_7/split_7/front_view.json"
+      ],
+      "total_vsl400_catalog_entries": 24753,
+      "num_clips": 1930,
+      "num_verified_signers": 26,
+      "all_signers_cover_all_30_classes": true,
+      "signers": [
+        {
+          "signer_id": "vsl2_signer_001",
+          "num_clips": 67,
+          "num_classes_covered": 30
+        },
+        {
+          "signer_id": "vsl2_signer_002",
+          "num_clips": 63,
+          "num_classes_covered": 30
+        },
+        {
+          "signer_id": "vsl2_signer_003",
+          "num_clips": 61,
+          "num_classes_covered": 30
+        },
+        {
+          "signer_id": "vsl2_signer_004",
+          "num_clips": 68,
+          "num_classes_covered": 30
+        },
+        {
+          "signer_id": "vsl2_signer_006",
+          "num_clips": 68,
+          "num_classes_covered": 30
+        },
+        {
+          "signer_id": "vsl2_signer_007",
+          "num_clips": 61,
+          "num_classes_covered": 30
+        },
+        {
+          "signer_id": "vsl2_signer_008",
+          "num_clips": 60,
+          "num_classes_covered": 30
+        },
+        {
+          "signer_id": "vsl2_signer_009",
+          "num_clips": 81,
+          "num_classes_covered": 30
+        },
+        {
+          "signer_id": "vsl2_signer_010",
+          "num_clips": 73,
+          "num_classes_covered": 30
+        },
+        {
+          "signer_id": "vsl2_signer_011",
+          "num_clips": 73,
+          "num_classes_covered": 30
+        },
+        {
+          "signer_id": "vsl2_signer_012",
+          "num_clips": 71,
+          "num_classes_covered": 30
+        },
+        {
+          "signer_id": "vsl2_signer_013",
+          "num_clips": 62,
+          "num_classes_covered": 30
+        },
+        {
+          "signer_id": "vsl2_signer_014",
+          "num_clips": 75,
+          "num_classes_covered": 30
+        },
+        {
+          "signer_id": "vsl2_signer_015",
+          "num_clips": 87,
+          "num_classes_covered": 30
+        },
+        {
+          "signer_id": "vsl2_signer_016",
+          "num_clips": 66,
+          "num_classes_covered": 30
+        },
+        {
+          "signer_id": "vsl2_signer_018",
+          "num_clips": 63,
+          "num_classes_covered": 30
+        },
+        {
+          "signer_id": "vsl2_signer_019",
+          "num_clips": 62,
+          "num_classes_covered": 30
+        },
+        {
+          "signer_id": "vsl2_signer_020",
+          "num_clips": 84,
+          "num_classes_covered": 30
+        },
+        {
+          "signer_id": "vsl2_signer_021",
+          "num_clips": 63,
+          "num_classes_covered": 30
+        },
+        {
+          "signer_id": "vsl2_signer_022",
+          "num_clips": 66,
+          "num_classes_covered": 30
+        },
+        {
+          "signer_id": "vsl2_signer_023",
+          "num_clips": 67,
+          "num_classes_covered": 30
+        },
+        {
+          "signer_id": "vsl2_signer_024",
+          "num_clips": 138,
+          "num_classes_covered": 30
+        },
+        {
+          "signer_id": "vsl2_signer_025",
+          "num_clips": 80,
+          "num_classes_covered": 30
+        },
+        {
+          "signer_id": "vsl2_signer_026",
+          "num_clips": 156,
+          "num_classes_covered": 30
+        },
+        {
+          "signer_id": "vsl2_signer_027",
+          "num_clips": 60,
+          "num_classes_covered": 30
+        },
+        {
+          "signer_id": "vsl2_signer_028",
+          "num_clips": 55,
+          "num_classes_covered": 30
+        }
+      ],
+      "split_recommendation": "Split all 26 verified VSL-v2 studio signers disjointly across train (~18 signers), val (~4 signers), and test (~4 signers) for ~100% class coverage (30/30 classes), ~9-12 clips/class in both val and test, identical val/test domain distribution, and 0% signer leakage."
+    }
+  }
+}

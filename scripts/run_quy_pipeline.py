@@ -270,11 +270,21 @@ def run_production_pipeline(
             kaggle_only=kaggle_only,
         )
 
+    signer_verif_path = project_root / paths_cfg.get(
+        "signer_verification_report", "data/manifests/signer_verification_report.json"
+    )
+    signer_verif_report = (
+        json.loads(signer_verif_path.read_text(encoding="utf-8"))
+        if signer_verif_path.exists()
+        else None
+    )
+
     summary: dict[str, Any] = {
         "mode": "production_kaggle_only" if kaggle_only else "production",
         "kaggle_only": bool(kaggle_only),
         "quality_report": quality_report,
         "scope_report": scope_report,
+        "signer_verification_report": signer_verif_report,
         "split_report": split_report,
         "augment_report": augment_report,
     }

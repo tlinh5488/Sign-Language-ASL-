@@ -302,7 +302,8 @@ def test_schema_contract_and_project_configs() -> None:
     assert cfg["split"]["random_seed"] == 42
     assert cfg["augmentation"]["allow_hflip"] is False
     assert cfg["augmentation"]["train_only"] is True
-    assert cfg["augmentation"]["kaggle_only_num_augments_per_sample"] == 4
+    assert cfg["augmentation"]["num_augments_per_sample"] == 2
+    assert cfg["augmentation"]["kaggle_only_num_augments_per_sample"] == 2
 
     classes = load_class_list(REPO_ROOT / "configs" / "class_list.json")
     assert len(classes) == 30
@@ -1216,7 +1217,7 @@ def test_kaggle_only_stage_guards_and_3signer_split(tmp_path: Path) -> None:
     )
     assert split_rep["mode"] == "kaggle_only"
     assert split_rep["leakage_check_passed"] is True
-    assert split_rep["recommended_train_aug_copies"] == 4
+    assert split_rep["recommended_train_aug_copies"] == 2
     for sp in ("train", "val", "test"):
         assert split_rep["splits"][sp]["num_signers"] == 1
         assert split_rep["splits"][sp]["num_samples"] == 4
@@ -1227,7 +1228,7 @@ def test_kaggle_only_stage_guards_and_3signer_split(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="kaggle_only"):
         split_dataset(self_csv, output_dir=tmp_path / "splits_bad", allow_2way=True, fallback_warning=True, kaggle_only=True)
 
-    # Step 4: Train-only augmentation defaults to 4x in kaggle_only mode; val/test untouched & refused
+    # Step 4: Train-only augmentation uses unified 2x from data_config.yaml; val/test untouched & refused
     train_csv = splits_dir / "train.csv"
     val_csv = splits_dir / "val.csv"
     test_csv = splits_dir / "test.csv"
@@ -1247,11 +1248,11 @@ def test_kaggle_only_stage_guards_and_3signer_split(tmp_path: Path) -> None:
         kaggle_only=True,
     )
     assert aug_rep["mode"] == "kaggle_only"
-    assert aug_rep["num_augmentations_per_video"] == 4
+    assert aug_rep["num_augmentations_per_video"] == 2
     assert aug_rep["allow_hflip"] is False
     assert aug_rep["original_train_samples"] == 4
-    assert aug_rep["generated_augmented_samples"] == 16
-    assert aug_rep["total_train_augmented_samples"] == 20
+    assert aug_rep["generated_augmented_samples"] == 8
+    assert aug_rep["total_train_augmented_samples"] == 12
     assert aug_rep["failed_videos"] == []
     assert _file_sha256(val_csv) == val_hash
     assert _file_sha256(test_csv) == test_hash
@@ -1264,39 +1265,65 @@ def test_kaggle_only_stage_guards_and_3signer_split(tmp_path: Path) -> None:
 
 
 def test_real_production_artifacts_and_no_demo_dir() -> None:
-    """Verify real production outputs in `data/manifests/` and `data/splits/` and confirm
-    `data/demo` has been completely deleted."""
+    """Strict QA gate enforcing all 11 peer-review fixes on real production artifacts in
+    `data/manifests/`, `data/splits/`, `README.md`, and `docs/`."""
+    # 0. Zero demo artifacts anywhere
     assert not (REPO_ROOT / "data" / "demo").exists(), "data/demo must be completely deleted!"
+    assert not (REPO_ROOT / "data" / "landmarks").exists(), "Fake demo data/landmarks must not exist!"
+    assert not (REPO_ROOT / "data" / "features").exists(), "Fake demo data/features must not exist!"
 
     manifests_dir = REPO_ROOT / "data" / "manifests"
     splits_dir = REPO_ROOT / "data" / "splits"
+    cfg = load_config(REPO_ROOT / "configs" / "data_config.yaml")
 
+    # 1. Verified signers audit report (Critical Error #4)
+    signer_report_path = manifests_dir / "signer_verification_report.json"
+    assert signer_report_path.exists()
+    signer_report = json.loads(signer_report_path.read_text(encoding="utf-8"))
+    assert signer_report["total_verified_clips"] == 2020
+    assert signer_report["total_valid_clips"] == 2020
+    assert signer_report["total_classes"] == 30
+    assert signer_report["total_verified_unique_signers"] == 31
+    assert signer_report["unverified_online_clips_included"] == 0
+    assert signer_report["sources"]["kaggle_vsl"]["num_verified_signers"] == 5
+    assert signer_report["sources"]["kaggle_vsl"]["all_duplicates_grouped_under_same_signer"] is True
+    assert signer_report["sources"]["kaggle_vsl_v2"]["num_verified_signers"] == 26
+
+    # 2. Full 2,020-clip real scoped manifest (Critical Error #1)
     scoped_csv = manifests_dir / "scoped_manifest.csv"
     assert scoped_csv.exists()
     scoped_df = load_manifest_df(scoped_csv, validate=True)
-    assert len(scoped_df) == 210
+    assert len(scoped_df) == 2020
     assert set(scoped_df["source"]) == {"kaggle_vsl", "kaggle_vsl_v2"}
     assert "self_recorded" not in set(scoped_df["source"])
+    assert int((scoped_df["source"] == "kaggle_vsl").sum()) == 90
+    assert int((scoped_df["source"] == "kaggle_vsl_v2").sum()) == 1930
     assert scoped_df["class_id"].nunique() == 30
-    assert scoped_df["signer_id"].nunique() == 7
+    assert scoped_df["signer_id"].nunique() == 31
     assert scoped_df["is_valid"].astype(bool).all()
 
+    # 3. Multi-signer, multi-clip-per-class val & test with domain parity (Critical Errors #2 & #3)
     train_df = load_manifest_df(splits_dir / "train.csv", validate=True, require_split=True)
     val_df = load_manifest_df(splits_dir / "val.csv", validate=True, require_split=True)
     test_df = load_manifest_df(splits_dir / "test.csv", validate=True, require_split=True)
     train_aug_df = load_manifest_df(splits_dir / "train_augmented.csv", validate=True, require_split=True)
 
-    assert len(train_df) + len(val_df) + len(test_df) == len(scoped_df) == 210
+    assert len(train_df) == 1417 and train_df["signer_id"].nunique() == 22
+    assert len(val_df) == 294 and val_df["signer_id"].nunique() == 4
+    assert len(test_df) == 309 and test_df["signer_id"].nunique() == 5
+    assert len(train_df) + len(val_df) + len(test_df) == 2020
     assert train_df["class_id"].nunique() == 30
     assert val_df["class_id"].nunique() == 30
     assert test_df["class_id"].nunique() == 30
+    assert int(val_df.groupby("class_id").size().min()) >= 8
+    assert int(test_df.groupby("class_id").size().min()) >= 9
+
     assert set(train_df["split"]) == {"train"}
     assert set(val_df["split"]) == {"val"}
     assert set(test_df["split"]) == {"test"}
     assert set(train_aug_df["split"]) == {"train"}
-    assert len(train_aug_df) > len(train_df)
 
-    # Zero signer leakage across train (including augmented), val, and test
+    # Zero signer leakage across train (orig & augmented), val, and test
     assert verify_no_signer_leakage(train_df, val_df, test_df) is True
     assert verify_no_signer_leakage(train_aug_df, val_df, test_df) is True
 
@@ -1304,22 +1331,64 @@ def test_real_production_artifacts_and_no_demo_dir() -> None:
     assert split_report["mode"] == "kaggle_only"
     assert split_report["leakage_check_passed"] is True
     assert split_report["signer_overlaps"] == {"train_val": [], "train_test": [], "val_test": []}
+    assert split_report["source_parity_check"]["val_test_domain_matched"] is True
+    assert split_report["source_parity_check"]["max_val_test_source_ratio_diff"] == 0.0
     for sp in ("train", "val", "test"):
         assert split_report["splits"][sp]["num_classes"] == 30
         assert split_report["splits"][sp]["missing_classes"] == []
+
+    # 4. Exact 2x augmentation multiplier parity across config, split_report, augment_report & CSV (Omission #4)
+    expected_aug_mult = int(cfg["augmentation"]["kaggle_only_num_augments_per_sample"])
+    assert expected_aug_mult == int(cfg["augmentation"]["num_augments_per_sample"]) == 2
+    assert split_report["recommended_train_aug_copies"] == expected_aug_mult
 
     aug_report = json.loads((splits_dir / "augment_report.json").read_text(encoding="utf-8"))
     assert aug_report["mode"] == "kaggle_only"
     assert aug_report["allow_hflip"] is False
     assert aug_report["train_only_guard_passed"] is True
     assert aug_report["failed_videos"] == []
-    assert aug_report["total_train_augmented_samples"] == len(train_aug_df)
+    assert aug_report["num_augmentations_per_video"] == expected_aug_mult
+    assert aug_report["original_train_samples"] == 1417
+    assert aug_report["generated_augmented_samples"] == 2834
+    assert aug_report["total_train_augmented_samples"] == 4251 == len(train_aug_df)
 
+    # 5. Every single video path across train_augmented (4,251) + val (294) + test (309) = 4,854 exists on disk
+    all_paths = (
+        train_aug_df["video_path"].tolist()
+        + val_df["video_path"].tolist()
+        + test_df["video_path"].tolist()
+    )
+    assert len(all_paths) == 4854
+    missing_videos = [p for p in all_paths if not (REPO_ROOT / p).is_file() or (REPO_ROOT / p).stat().st_size == 0]
+    assert missing_videos == [], f"Missing or empty video files on disk: {missing_videos[:5]}"
+
+    # 6. pipeline_summary.json parity
     summary_path = REPO_ROOT / "data" / "pipeline_summary.json"
     assert summary_path.exists()
     summary = json.loads(summary_path.read_text(encoding="utf-8"))
     assert summary["mode"] == "production_kaggle_only"
     assert summary["kaggle_only"] is True
+    assert summary["split_report"]["total_samples"] == 2020
+    assert summary["augment_report"]["total_train_augmented_samples"] == 4251
+
+    # 7. Docs & worksheet verification (Critical Error #5 + Omissions #2, #3, #5)
+    readme_text = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+    assert "demo" not in readme_text.lower()
+    for benchmark in ("ASL Alphabet", "WLASL", "MS-ASL"):
+        assert benchmark in readme_text, f"README.md missing benchmark comparison: {benchmark}"
+    for num_token in ("2.020", "1.417", "294", "309", "4.251", "2.834"):
+        assert num_token in readme_text or num_token.replace(".", ",") in readme_text, (
+            f"README.md missing exact production count: {num_token}"
+        )
+
+    collection_guide_text = (REPO_ROOT / "docs" / "collection_guide.md").read_text(encoding="utf-8")
+    assert "--demo" not in collection_guide_text.lower()
+
+    phieu_md = REPO_ROOT / "docs" / "phieu_tim_hieu_phan_1_quy.md"
+    phieu_docx = REPO_ROOT / "docs" / "Phieu_Tim_Hieu_Phan_1_Quy.docx"
+    assert phieu_md.exists() and phieu_md.stat().st_size > 1000
+    assert phieu_docx.exists() and phieu_docx.stat().st_size > 5000
+    assert "demo" not in phieu_md.read_text(encoding="utf-8").lower()
 
 
 def test_kaggle_v2_parser_and_dual_dataset_merge(tmp_path: Path) -> None:

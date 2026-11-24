@@ -21,11 +21,13 @@ support offline parsing of already-downloaded/synthetic directories via ``--loca
 from __future__ import annotations
 
 import argparse
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import json
 import re
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 from typing import Any
 
@@ -154,25 +156,53 @@ def download_kaggle_dataset(
     return cli_target
 
 
+def load_qipedc_verified_signer_map(map_path: str | Path | None) -> dict[str, str]:
+    """Load the visually-verified QIPEDC ``video_name -> qipedc_signer_XX`` mapping JSON."""
+    if map_path is None:
+        return {}
+    p = Path(map_path)
+    if not p.exists() or not p.is_file():
+        return {}
+    payload = json.loads(p.read_text(encoding="utf-8"))
+    raw_map = payload.get("video_to_signer", payload) if isinstance(payload, dict) else {}
+    out: dict[str, str] = {}
+    if isinstance(raw_map, dict):
+        for k, v in raw_map.items():
+            if k and v:
+                key = str(k).strip()
+                val = str(v).strip()
+                out[key] = val
+                out[key.lower()] = val
+                out[Path(key).stem.lower()] = val
+    return out
+
+
 def infer_kaggle_signer_id(
     video_name: str,
     rel_path: str | Path | None = None,
     row_meta: dict[str, Any] | None = None,
     *,
+    verified_signer_map: dict[str, str] | None = None,
     region_suffix_map: dict[str, str] | None = None,
     default_signer_prefix: str = "kaggle_signer_common",
 ) -> str:
     """Deterministically infer a ``signer_id`` for a QIPEDC Kaggle VSL video.
 
     Resolution priority:
-    1. Explicit ``signer_id`` / ``signer`` / ``person_id`` column in metadata.
-    2. Explicit ``region`` / ``dialect`` column in metadata.
-    3. Signer token in relative folder path or filename (e.g., ``signer_01``, ``p03``).
-    4. QIPEDC regional suffix in filename stem (e.g., ``D0001B.mp4`` -> ``kaggle_signer_north``,
-       ``D0001N.mp4`` -> ``kaggle_signer_south``, ``D0001T.mp4`` -> ``kaggle_signer_central``).
-    5. Deterministic fallback using QIPEDC prefix group (e.g., ``kaggle_signer_common_d`` or
-       ``kaggle_signer_common_w``) or parent folder name.
+    1. Visually-verified physical actor map (``configs/qipedc_signer_map.json``),
+       preventing the same human demonstrator from receiving different IDs across B/T/N.
+    2. Explicit ``signer_id`` / ``signer`` / ``person_id`` column in metadata.
+    3. Explicit ``region`` / ``dialect`` column in metadata.
+    4. Signer token in relative folder path or filename (e.g., ``signer_01``, ``p03``).
+    5. QIPEDC regional suffix fallback (e.g., ``D0001B.mp4`` -> ``kaggle_signer_north``).
+    6. Deterministic fallback using QIPEDC prefix group or parent folder name.
     """
+    if verified_signer_map:
+        base_name = Path(video_name).name.strip()
+        for key in (base_name, base_name.lower(), Path(base_name).stem.lower()):
+            if key in verified_signer_map:
+                return verified_signer_map[key]
+
     suffix_map = dict(DEFAULT_REGION_SUFFIX_MAP)
     if region_suffix_map:
         suffix_map.update({str(k).upper(): str(v) for k, v in region_suffix_map.items()})
@@ -406,6 +436,7 @@ def parse_kaggle_dataset_to_manifest(
     id_column: str = "ID",
     video_column: str = "VIDEO",
     label_column: str = "LABEL",
+    verified_signer_map: dict[str, str] | None = None,
     region_suffix_map: dict[str, str] | None = None,
     default_signer_prefix: str = "kaggle_signer_common",
     probe_videos: bool = True,
@@ -478,6 +509,7 @@ def parse_kaggle_dataset_to_manifest(
                 Path(video_ref).name,
                 rel_path=rel_inside_dataset,
                 row_meta=rec.to_dict(),
+                verified_signer_map=verified_signer_map,
                 region_suffix_map=region_suffix_map,
                 default_signer_prefix=default_signer_prefix,
             )
@@ -531,6 +563,7 @@ def parse_kaggle_dataset_to_manifest(
             signer_id = infer_kaggle_signer_id(
                 vp.name,
                 rel_path=rel_inside,
+                verified_signer_map=verified_signer_map,
                 region_suffix_map=region_suffix_map,
                 default_signer_prefix=default_signer_prefix,
             )
@@ -579,6 +612,7 @@ def parse_kaggle_v2_dataset_to_manifest(
     source: str = "kaggle_vsl_v2",
     default_signer_prefix: str = "vsl2_signer",
     exclude_pre_augmented: bool = True,
+    require_verified_signer: bool = False,
     probe_videos: bool = True,
     show_progress: bool = False,
 ) -> pd.DataFrame:
@@ -660,6 +694,11 @@ def parse_kaggle_v2_dataset_to_manifest(
                 split_hint = None
                 raw_gloss = parts[-2]
 
+            if require_verified_signer:
+                stem = vp.stem.strip()
+                if stem not in signer_map and stem.split("_")[0] not in signer_map:
+                    continue
+
             cid, canonical_label = _resolve_canonical_class(raw_gloss, label_lookup, slug_lookup)
             signer_id = infer_vsl_v2_signer_id(
                 vp.name,
@@ -724,6 +763,11 @@ def parse_kaggle_v2_dataset_to_manifest(
             vp = base_dir / "front_view" / fname
             if not vp.exists():
                 vp = base_dir / fname
+
+            if require_verified_signer:
+                stem = vp.stem.strip()
+                if stem not in signer_map and stem.split("_")[0] not in signer_map:
+                    continue
 
             cid, canonical_label = _resolve_canonical_class(raw_gloss, label_lookup, slug_lookup)
             raw_sid = item.get("signer_id") or item.get("signer")
@@ -816,6 +860,128 @@ def parse_kaggle_v2_dataset_to_manifest(
     return pd.DataFrame(rows, columns=MANIFEST_COLUMNS) if rows else make_empty_manifest()
 
 
+def sync_in_scope_qipedc_videos(
+    dataset_slug: str,
+    target_dir: str | Path,
+    class_list: list[dict[str, Any]],
+    *,
+    labels_rel_path: str = "Dataset/Labels/label.csv",
+    videos_rel_dir: str = "Dataset/Videos",
+    workers: int = 12,
+) -> Path:
+    """Selectively download only in-scope 30-class QIPEDC `.mp4` videos + aligned `label.csv`."""
+    import kagglehub  # type: ignore
+
+    root = Path(target_dir).resolve()
+    (root / Path(labels_rel_path).parent).mkdir(parents=True, exist_ok=True)
+    (root / videos_rel_dir).mkdir(parents=True, exist_ok=True)
+
+    full_csv_src = Path(kagglehub.dataset_download(dataset_slug, path=labels_rel_path))
+    target_norms = {normalize_vietnamese_label(str(c["label"])).lower() for c in class_list}
+    df_full = pd.read_csv(full_csv_src, encoding="utf-8-sig")
+    df_full["_norm"] = df_full["LABEL"].astype(str).map(lambda s: normalize_vietnamese_label(s).lower())
+    sub = df_full.loc[df_full["_norm"].isin(target_norms)].drop(columns=["_norm"]).copy()
+    videos = sub["VIDEO"].astype(str).str.strip().tolist()
+
+    def _fetch(vname: str) -> tuple[str, bool]:
+        dst = root / videos_rel_dir / vname
+        if dst.exists() and dst.stat().st_size > 0:
+            return vname, True
+        for attempt in range(4):
+            try:
+                src = Path(kagglehub.dataset_download(dataset_slug, path=f"{videos_rel_dir}/{vname}"))
+                shutil.copy2(src, dst)
+                return vname, True
+            except Exception:
+                time.sleep(1.5 * (attempt + 1))
+        return vname, False
+
+    with ThreadPoolExecutor(max_workers=max(1, int(workers))) as ex:
+        futs = [ex.submit(_fetch, v) for v in videos]
+        for _ in tqdm(as_completed(futs), total=len(futs), desc="Syncing QIPEDC in-scope videos"):
+            pass
+
+    existing = {p.name for p in (root / videos_rel_dir).glob("*.mp4") if p.stat().st_size > 0}
+    sub_present = sub.loc[sub["VIDEO"].astype(str).str.strip().isin(existing)].copy()
+    sub_present.to_csv(root / labels_rel_path, index=False, encoding="utf-8-sig")
+    return root
+
+
+def sync_in_scope_vsl_v2_videos(
+    dataset_slug: str,
+    target_dir: str | Path,
+    class_list: list[dict[str, Any]],
+    *,
+    frame_splited_rel_dir: str = "processed/processed/frame_splited",
+    raw_vsl400_rel_dir: str = "raw/raw/VSL400",
+    require_verified_signer: bool = True,
+    workers: int = 12,
+) -> Path:
+    """Selectively download VSL400 `Part_1..Part_7` `front_view.json` + all verified in-scope `.mp4` clips."""
+    import kagglehub  # type: ignore
+
+    root = Path(target_dir).resolve()
+    for rel in (
+        f"{frame_splited_rel_dir}/split_manifest.tsv",
+        f"{frame_splited_rel_dir}/train.json",
+        f"{frame_splited_rel_dir}/test.json",
+    ):
+        dst = root / rel
+        if not dst.exists() or dst.stat().st_size == 0:
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            src = Path(kagglehub.dataset_download(dataset_slug, path=rel))
+            shutil.copy2(src, dst)
+
+    for part in range(1, 8):
+        rel = f"{raw_vsl400_rel_dir}/Part_{part}/split_{part}/front_view.json"
+        dst = root / rel
+        if not dst.exists() or dst.stat().st_size == 0:
+            try:
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                src = Path(kagglehub.dataset_download(dataset_slug, path=rel))
+                shutil.copy2(src, dst)
+            except Exception:
+                continue
+
+    signer_map = load_vsl400_signer_map(root)
+    target_norms = {normalize_vietnamese_label(str(c["label"])).lower() for c in class_list}
+    tr = json.loads((root / frame_splited_rel_dir / "train.json").read_text(encoding="utf-8"))
+    te = json.loads((root / frame_splited_rel_dir / "test.json").read_text(encoding="utf-8"))
+
+    rels: list[str] = []
+    for split_name, arr in (("train", tr), ("test", te)):
+        for item in arr:
+            gloss = str(item.get("gloss", "")).strip()
+            vid = str(item.get("videoid", "")).strip()
+            if not gloss or not vid:
+                continue
+            if normalize_vietnamese_label(gloss).lower() not in target_norms:
+                continue
+            if require_verified_signer and vid not in signer_map and vid.split("_")[0] not in signer_map:
+                continue
+            rels.append(f"{frame_splited_rel_dir}/{split_name}/{gloss}/{vid}.mp4")
+
+    def _fetch(rel_path: str) -> tuple[str, bool]:
+        dst = root / rel_path
+        if dst.exists() and dst.stat().st_size > 0:
+            return rel_path, True
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        for attempt in range(4):
+            try:
+                src = Path(kagglehub.dataset_download(dataset_slug, path=rel_path))
+                shutil.copy2(src, dst)
+                return rel_path, True
+            except Exception:
+                time.sleep(1.5 * (attempt + 1))
+        return rel_path, False
+
+    with ThreadPoolExecutor(max_workers=max(1, int(workers))) as ex:
+        futs = [ex.submit(_fetch, r) for r in rels]
+        for _ in tqdm(as_completed(futs), total=len(futs), desc="Syncing VSL-v2 verified in-scope videos"):
+            pass
+    return root
+
+
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
@@ -876,6 +1042,17 @@ def build_arg_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Skip OpenCV video probing (faster metadata-only indexing).",
     )
+    parser.add_argument(
+        "--sync-videos",
+        action="store_true",
+        help="Selectively download only verified in-scope 30-class .mp4 videos + metadata (~300 MB total).",
+    )
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=12,
+        help="Parallel download worker threads for --sync-videos (default: 12).",
+    )
     return parser
 
 
@@ -910,7 +1087,25 @@ def _run_qipedc(args: argparse.Namespace, cfg: dict[str, Any], project_root: Pat
             print(f"[qipedc] Unique labels: {df_labels['LABEL'].nunique()}")
         return 0
 
-    if args.local_dir:
+    verified_map_rel = kaggle_cfg.get("verified_signer_map_path")
+    verified_signer_map = (
+        load_qipedc_verified_signer_map(project_root / verified_map_rel)
+        if verified_map_rel
+        else None
+    )
+
+    if args.sync_videos:
+        if not class_list:
+            raise ValueError("--sync-videos requires configs/class_list.json to define in-scope classes.")
+        dataset_dir = sync_in_scope_qipedc_videos(
+            dataset_slug=dataset_slug,
+            target_dir=raw_kaggle_dir,
+            class_list=class_list,
+            labels_rel_path=labels_rel_path,
+            videos_rel_dir=videos_rel_dir,
+            workers=args.workers,
+        )
+    elif args.local_dir:
         dataset_dir = Path(args.local_dir).resolve()
         if not dataset_dir.exists():
             raise FileNotFoundError(f"Local Kaggle directory does not exist: {dataset_dir}")
@@ -932,6 +1127,7 @@ def _run_qipedc(args: argparse.Namespace, cfg: dict[str, Any], project_root: Pat
         id_column=kaggle_cfg.get("id_column", "ID"),
         video_column=kaggle_cfg.get("video_column", "VIDEO"),
         label_column=kaggle_cfg.get("label_column", "LABEL"),
+        verified_signer_map=verified_signer_map,
         region_suffix_map=kaggle_cfg.get("region_suffix_map"),
         default_signer_prefix=kaggle_cfg.get("default_signer_prefix", "kaggle_signer_common"),
         probe_videos=not args.skip_probe,
@@ -988,8 +1184,21 @@ def _run_vsl_v2(args: argparse.Namespace, cfg: dict[str, Any], project_root: Pat
         )
         return 0
 
+    require_verified = bool(v2_cfg.get("require_verified_signer", True))
     local_override = args.local_v2_dir or (args.local_dir if args.dataset == "vsl_v2" else None)
-    if local_override:
+    if args.sync_videos:
+        if not class_list:
+            raise ValueError("--sync-videos requires configs/class_list.json to define in-scope classes.")
+        dataset_dir = sync_in_scope_vsl_v2_videos(
+            dataset_slug=dataset_slug,
+            target_dir=raw_v2_dir,
+            class_list=class_list,
+            frame_splited_rel_dir=frame_splited_rel_dir,
+            raw_vsl400_rel_dir=raw_vsl400_rel_dir,
+            require_verified_signer=require_verified,
+            workers=args.workers,
+        )
+    elif local_override:
         dataset_dir = Path(local_override).resolve()
         if not dataset_dir.exists():
             raise FileNotFoundError(f"Local VSL v2 directory does not exist: {dataset_dir}")
@@ -1011,6 +1220,7 @@ def _run_vsl_v2(args: argparse.Namespace, cfg: dict[str, Any], project_root: Pat
         source=v2_cfg.get("source_name", "kaggle_vsl_v2"),
         default_signer_prefix=v2_cfg.get("default_signer_prefix", "vsl2_signer"),
         exclude_pre_augmented=bool(v2_cfg.get("exclude_pre_augmented", True)),
+        require_verified_signer=require_verified,
         probe_videos=not args.skip_probe,
         show_progress=True,
     )

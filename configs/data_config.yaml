@@ -39,7 +39,9 @@ kaggle:
   id_column: "ID"
   video_column: "VIDEO"
   label_column: "LABEL"
-  # QIPEDC filenames use regional suffix before .mp4: B (Bắc), N (Nam), T (Trung)
+  # Visually-verified physical human actor map (prevents same person appearing under B/T/N)
+  verified_signer_map_path: "configs/qipedc_signer_map.json"
+  # Fallback regional suffix map for unmapped clips outside the verified 90-clip audit
   region_suffix_map:
     B: "kaggle_signer_north"
     N: "kaggle_signer_south"
@@ -49,7 +51,8 @@ kaggle:
 # Secondary public Kaggle VSL dataset for multi-signer diversity & scale
 # 472 glosses, 26,446 canonical front-view cropped clips (VSL400 + online, CC BY 4.0)
 # 151 overlapping glosses with QIPEDC; all 30 curated classes in class_list.json
-# overlap both datasets (55-93 clips/class in VSL-v2 + 3 B/T/N clips/class in QIPEDC).
+# overlap both datasets (55-93 verified VSL400 clips/class across 26 studio signers
+# + 3 QIPEDC clips/class across 5 visually-verified actors = 2,020 real clips).
 kaggle_v2:
   dataset_slug: "nguyenanfms/vsl-vietnamese-sign-language-v2"
   source_name: "kaggle_vsl_v2"
@@ -59,6 +62,7 @@ kaggle_v2:
   raw_vsl400_rel_dir: "raw/raw/VSL400"
   prefer_processed_front_view: true
   exclude_pre_augmented: true
+  require_verified_signer: true
   default_signer_prefix: "vsl2_signer"
 
 scope:
@@ -109,7 +113,9 @@ augmentation:
   train_only: true
   random_seed: 42
   num_augments_per_sample: 2
-  kaggle_only_num_augments_per_sample: 4
+  # Unified 2x multiplier across data_config.yaml, split_report.json, augment_report.json & README.md
+  # (With ~1,400+ real train clips from 2,020 total clips, 2x yields ~4,200+ train clips / ~140+ per class)
+  kaggle_only_num_augments_per_sample: 2
   # IMPORTANT: Horizontal flip is FALSE by default because asymmetric VSL signs
   # depend on dominant-hand handedness and spatial directionality.
   allow_hflip: false

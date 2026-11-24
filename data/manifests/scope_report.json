@@ -3,15 +3,15 @@
   "kaggle_only": true,
   "effective_min_samples": 3,
   "effective_min_signers": 3,
-  "input_samples": 210,
-  "output_samples": 210,
+  "input_samples": 2020,
+  "output_samples": 2020,
   "dropped_non_kaggle_samples": 0,
   "dropped_invalid_samples": 0,
   "dropped_out_of_scope_samples": 0,
   "num_classes_configured": 30,
   "num_classes_present": 30,
   "missing_classes": [],
-  "num_unique_signers": 7,
+  "num_unique_signers": 31,
   "classes": [
     {
       "class_id": 0,
@@ -477,10 +477,10 @@
         "N"
       ],
       "action_description": "Bàn tay không thuận mở ngửa trước ngực làm đế đỡ, tay thuận nắm hờ đặt lên trên (hoặc đỡ dưới cổ tay) rồi cùng nâng nhẹ lên phía trước theo động tác nâng đỡ.",
-      "num_samples": 7,
-      "num_signers": 7,
+      "num_samples": 69,
+      "num_signers": 28,
       "sources": {
-        "kaggle_vsl_v2": 4,
+        "kaggle_vsl_v2": 66,
         "kaggle_vsl": 3
       },
       "kaggle_clip_count": 3,
@@ -498,10 +498,10 @@
         "N"
       ],
       "action_description": "Hai bàn tay mở ngửa, các ngón hơi khum cong đặt trước ngực rồi kéo nhẹ về phía thân người (hoặc vuốt nhẹ ngực theo biến thể QIPEDC vùng B/T/N) biểu thị mong muốn.",
-      "num_samples": 7,
-      "num_signers": 7,
+      "num_samples": 81,
+      "num_signers": 28,
       "sources": {
-        "kaggle_vsl_v2": 4,
+        "kaggle_vsl_v2": 78,
         "kaggle_vsl": 3
       },
       "kaggle_clip_count": 3,
@@ -519,10 +519,10 @@
         "N"
       ],
       "action_description": "Hai bàn tay đặt trước ngực (hai ngón cái/ngón trỏ nối tiếp hoặc lòng bàn tay nối nhau) cùng đẩy thẳng đều về phía trước 1–2 nhịp biểu thị sự tiếp diễn liên tục.",
-      "num_samples": 7,
-      "num_signers": 7,
+      "num_samples": 74,
+      "num_signers": 28,
       "sources": {
-        "kaggle_vsl_v2": 4,
+        "kaggle_vsl_v2": 71,
         "kaggle_vsl": 3
       },
       "kaggle_clip_count": 3,
@@ -540,10 +540,10 @@
         "N"
       ],
       "action_description": "Bàn tay thuận mở thẳng (hoặc hai tay) đặt trước ngực, lòng bàn tay hướng ra ngoài rồi đẩy gạt dứt khoát sang bên kết hợp lắc đầu nhẹ biểu thị sự từ chối.",
-      "num_samples": 7,
-      "num_signers": 7,
+      "num_samples": 74,
+      "num_signers": 27,
       "sources": {
-        "kaggle_vsl_v2": 4,
+        "kaggle_vsl_v2": 71,
         "kaggle_vsl": 3
       },
       "kaggle_clip_count": 3,
@@ -561,10 +561,10 @@
         "N"
       ],
       "action_description": "Ngón trỏ tay thuận chạm nhẹ gần môi/cằm rồi hạ xuống đặt bàn tay thuận áp lên lòng hoặc mu bàn tay không thuận trước ngực (hoặc móc ngón út cam kết theo vùng B/T/N).",
-      "num_samples": 7,
-      "num_signers": 7,
+      "num_samples": 60,
+      "num_signers": 27,
       "sources": {
-        "kaggle_vsl_v2": 4,
+        "kaggle_vsl_v2": 57,
         "kaggle_vsl": 3
       },
       "kaggle_clip_count": 3,
@@ -582,10 +582,10 @@
         "N"
       ],
       "action_description": "Thực hiện ký hiệu 'không' (lắc nhẹ ngón trỏ hoặc xua bàn tay trước ngực) kết hợp động tác khuyên ngăn dứt khoát cùng biểu cảm lắc đầu nhẹ.",
-      "num_samples": 7,
-      "num_signers": 7,
+      "num_samples": 68,
+      "num_signers": 27,
       "sources": {
-        "kaggle_vsl_v2": 4,
+        "kaggle_vsl_v2": 65,
         "kaggle_vsl": 3
       },
       "kaggle_clip_count": 3,
@@ -603,10 +603,10 @@
         "N"
       ],
       "action_description": "Tay thực hiện ký hiệu phủ định 'không' trước ngực nối tiếp động tác thu tay về/gạt ngang thay vì đưa ra trước (phủ định hành động 'cho') kèm lắc đầu nhẹ.",
-      "num_samples": 7,
-      "num_signers": 7,
+      "num_samples": 64,
+      "num_signers": 27,
       "sources": {
-        "kaggle_vsl_v2": 4,
+        "kaggle_vsl_v2": 61,
         "kaggle_vsl": 3
       },
       "kaggle_clip_count": 3,
@@ -624,10 +624,10 @@
         "N"
       ],
       "action_description": "Thực hiện ký hiệu 'quen' (đưa tay gần thái dương/ngực) rồi chuyển ngay sang động tác phủ định 'không' (lắc cổ tay/xua tay ra ngoài) kèm biểu cảm lạ lẫm.",
-      "num_samples": 7,
-      "num_signers": 7,
+      "num_samples": 61,
+      "num_signers": 27,
       "sources": {
-        "kaggle_vsl_v2": 4,
+        "kaggle_vsl_v2": 58,
         "kaggle_vsl": 3
       },
       "kaggle_clip_count": 3,
@@ -645,10 +645,10 @@
         "N"
       ],
       "action_description": "Tay thuận duỗi ngón trỏ và ngón giữa tạo chữ V đặt gần đuôi mắt, đầu ngón tay hướng thẳng ra phía trước rồi đẩy nhẹ theo hướng nhìn.",
-      "num_samples": 7,
-      "num_signers": 7,
+      "num_samples": 73,
+      "num_signers": 27,
       "sources": {
-        "kaggle_vsl_v2": 4,
+        "kaggle_vsl_v2": 70,
         "kaggle_vsl": 3
       },
       "kaggle_clip_count": 3,
@@ -666,10 +666,10 @@
         "N"
       ],
       "action_description": "Bàn tay thuận đặt gần má/miệng hoặc khoanh/hất nhẹ trước ngực kết hợp ngoảnh nhẹ mặt và biểu cảm hờn dỗi đặc trưng theo chuẩn QIPEDC vùng B/T/N.",
-      "num_samples": 7,
-      "num_signers": 7,
+      "num_samples": 64,
+      "num_signers": 27,
       "sources": {
-        "kaggle_vsl_v2": 4,
+        "kaggle_vsl_v2": 61,
         "kaggle_vsl": 3
       },
       "kaggle_clip_count": 3,
@@ -687,10 +687,10 @@
         "N"
       ],
       "action_description": "Tay thuận đặt gần má/tai làm dấu giới tính nữ theo chuẩn VSL rồi đưa nhẹ sang bên/lên ngang vai (biểu thị bậc chị lớn hơn) theo biến thể vùng B/T/N.",
-      "num_samples": 7,
-      "num_signers": 7,
+      "num_samples": 84,
+      "num_signers": 28,
       "sources": {
-        "kaggle_vsl_v2": 4,
+        "kaggle_vsl_v2": 81,
         "kaggle_vsl": 3
       },
       "kaggle_clip_count": 3,
@@ -708,10 +708,10 @@
         "N"
       ],
       "action_description": "Tay thuận thực hiện ký hiệu 'ông' (vuốt nhẹ vùng cằm/trán mô phỏng râu hoặc bậc cao tuổi) nối tiếp ký hiệu 'nội' (hướng về phía trong/bên bố) theo chuẩn vùng B/T/N.",
-      "num_samples": 7,
-      "num_signers": 7,
+      "num_samples": 70,
+      "num_signers": 29,
       "sources": {
-        "kaggle_vsl_v2": 4,
+        "kaggle_vsl_v2": 67,
         "kaggle_vsl": 3
       },
       "kaggle_clip_count": 3,
@@ -729,10 +729,10 @@
         "N"
       ],
       "action_description": "Tay thuận thực hiện ký hiệu 'ông' trước vùng mặt/cằm nối tiếp ký hiệu 'ngoại' (đưa tay hướng ra phía ngoài/bên mẹ) theo biến thể QIPEDC vùng B/T/N.",
-      "num_samples": 7,
-      "num_signers": 7,
+      "num_samples": 69,
+      "num_signers": 28,
       "sources": {
-        "kaggle_vsl_v2": 4,
+        "kaggle_vsl_v2": 66,
         "kaggle_vsl": 3
       },
       "kaggle_clip_count": 3,
@@ -750,10 +750,10 @@
         "N"
       ],
       "action_description": "Ngón trỏ (hoặc ngón giữa) tay thuận chạm nhẹ vùng trán/thái dương rồi bật mở nhanh hướng ra phía trước kèm nét mặt sáng sủa biểu thị sự lanh lợi, thông minh.",
-      "num_samples": 7,
-      "num_signers": 7,
+      "num_samples": 64,
+      "num_signers": 28,
       "sources": {
-        "kaggle_vsl_v2": 4,
+        "kaggle_vsl_v2": 61,
         "kaggle_vsl": 3
       },
       "kaggle_clip_count": 3,
@@ -771,10 +771,10 @@
         "N"
       ],
       "action_description": "Bàn tay thuận mở nhẹ đặt gần mũi, phẩy nhẹ mùi hương về phía mũi 1–2 nhịp kết hợp biểu cảm khoan khoái, hài lòng.",
-      "num_samples": 7,
-      "num_signers": 7,
+      "num_samples": 85,
+      "num_signers": 28,
       "sources": {
-        "kaggle_vsl_v2": 4,
+        "kaggle_vsl_v2": 82,
         "kaggle_vsl": 3
       },
       "kaggle_clip_count": 3,
@@ -792,10 +792,10 @@
         "N"
       ],
       "action_description": "Bàn tay không thuận mở ngửa hơi khum trước ngực, mu bàn tay thuận lướt nhẹ quét qua lòng bàn tay không thuận hướng lên trên 1 nhịp biểu thị đồ vật mới tinh.",
-      "num_samples": 7,
-      "num_signers": 7,
+      "num_samples": 60,
+      "num_signers": 28,
       "sources": {
-        "kaggle_vsl_v2": 4,
+        "kaggle_vsl_v2": 57,
         "kaggle_vsl": 3
       },
       "kaggle_clip_count": 3,
@@ -813,10 +813,10 @@
         "N"
       ],
       "action_description": "Bàn tay không thuận mở ngửa trước ngực, hai ngón tay (trỏ và giữa) của tay thuận đứng lên lòng bàn tay không thuận rồi gập khuỵu xuống kèm nét mặt mệt mỏi.",
-      "num_samples": 7,
-      "num_signers": 7,
+      "num_samples": 59,
+      "num_signers": 28,
       "sources": {
-        "kaggle_vsl_v2": 4,
+        "kaggle_vsl_v2": 56,
         "kaggle_vsl": 3
       },
       "kaggle_clip_count": 3,
@@ -834,10 +834,10 @@
         "N"
       ],
       "action_description": "Bàn tay không thuận khum trước ngực giả cầm bát phở, tay thuận dùng hai ngón tay (trỏ và giữa) gắp sợi phở nâng lên đưa về phía miệng 1–2 nhịp theo vùng B/T/N.",
-      "num_samples": 7,
-      "num_signers": 7,
+      "num_samples": 60,
+      "num_signers": 28,
       "sources": {
-        "kaggle_vsl_v2": 4,
+        "kaggle_vsl_v2": 57,
         "kaggle_vsl": 3
       },
       "kaggle_clip_count": 3,
@@ -855,10 +855,10 @@
         "N"
       ],
       "action_description": "Hai bàn tay (hoặc tay thuận) đặt trước ngực, nắm-mở luân phiên dứt khoát 2–3 nhịp (mô phỏng động tác vắt sữa) kết hợp động tác uống nếu có theo chuẩn vùng B/T/N.",
-      "num_samples": 7,
-      "num_signers": 7,
+      "num_samples": 62,
+      "num_signers": 28,
       "sources": {
-        "kaggle_vsl_v2": 4,
+        "kaggle_vsl_v2": 59,
         "kaggle_vsl": 3
       },
       "kaggle_clip_count": 3,
@@ -876,10 +876,10 @@
         "N"
       ],
       "action_description": "Ngón trỏ và ngón giữa hai bàn tay khép gõ nhẹ vào nhau trước ngực rồi tách mở xoay xuống dưới hai bên (mô phỏng động tác đập tách vỏ quả trứng).",
-      "num_samples": 7,
-      "num_signers": 7,
+      "num_samples": 66,
+      "num_signers": 29,
       "sources": {
-        "kaggle_vsl_v2": 4,
+        "kaggle_vsl_v2": 63,
         "kaggle_vsl": 3
       },
       "kaggle_clip_count": 3,
@@ -897,10 +897,10 @@
         "N"
       ],
       "action_description": "Đầu ngón trỏ tay thuận chạm nhẹ lên vùng má gần khóe miệng rồi xoay tròn cổ tay nhẹ 1–2 nhịp (mô phỏng vị ngọt của viên kẹo theo chuẩn VSL vùng B/T/N).",
-      "num_samples": 7,
-      "num_signers": 7,
+      "num_samples": 65,
+      "num_signers": 28,
       "sources": {
-        "kaggle_vsl_v2": 4,
+        "kaggle_vsl_v2": 62,
         "kaggle_vsl": 3
       },
       "kaggle_clip_count": 3,
@@ -918,10 +918,10 @@
         "N"
       ],
       "action_description": "Hai bàn tay đặt trước ngực mô phỏng hạt gạo nhỏ hoặc động tác vo gạo nhẹ nhàng giữa hai lòng bàn tay theo biến thể QIPEDC vùng B/T/N.",
-      "num_samples": 7,
-      "num_signers": 7,
+      "num_samples": 60,
+      "num_signers": 28,
       "sources": {
-        "kaggle_vsl_v2": 4,
+        "kaggle_vsl_v2": 57,
         "kaggle_vsl": 3
       },
       "kaggle_clip_count": 3,
@@ -939,10 +939,10 @@
         "N"
       ],
       "action_description": "Hai bàn tay khum tròn trước ngực/gần tai giả cầm quả dừa rồi lắc nhẹ sang hai bên (mô phỏng tiếng nước dừa lắc bên trong) theo chuẩn QIPEDC vùng B/T/N.",
-      "num_samples": 7,
-      "num_signers": 7,
+      "num_samples": 60,
+      "num_signers": 28,
       "sources": {
-        "kaggle_vsl_v2": 4,
+        "kaggle_vsl_v2": 57,
         "kaggle_vsl": 3
       },
       "kaggle_clip_count": 3,
@@ -960,10 +960,10 @@
         "N"
       ],
       "action_description": "Tay thuận vỗ nhẹ lên đùi/hông hoặc gập ngón tay gần miệng/tai mô phỏng đôi tai hoặc tiếng gọi chó 2 nhịp (theo đúng biến thể vùng B/T/N).",
-      "num_samples": 7,
-      "num_signers": 7,
+      "num_samples": 67,
+      "num_signers": 28,
       "sources": {
-        "kaggle_vsl_v2": 4,
+        "kaggle_vsl_v2": 64,
         "kaggle_vsl": 3
       },
       "kaggle_clip_count": 3,
@@ -981,10 +981,10 @@
         "N"
       ],
       "action_description": "Ngón cái và ngón trỏ hai bàn tay chạm gần khóe miệng/má rồi vuốt nhẹ ra hai bên 1–2 nhịp mô phỏng hàng ria mép của con mèo.",
-      "num_samples": 7,
-      "num_signers": 7,
+      "num_samples": 60,
+      "num_signers": 28,
       "sources": {
-        "kaggle_vsl_v2": 4,
+        "kaggle_vsl_v2": 57,
         "kaggle_vsl": 3
       },
       "kaggle_clip_count": 3,
@@ -1002,10 +1002,10 @@
         "N"
       ],
       "action_description": "Hai bàn tay đặt trước ngực mô phỏng không gian cây xanh và lối đi dạo trong công viên (kết hợp ký hiệu cây/khuôn viên rộng) theo chuẩn QIPEDC vùng B/T/N.",
-      "num_samples": 7,
-      "num_signers": 7,
+      "num_samples": 67,
+      "num_signers": 28,
       "sources": {
-        "kaggle_vsl_v2": 4,
+        "kaggle_vsl_v2": 64,
         "kaggle_vsl": 3
       },
       "kaggle_clip_count": 3,
@@ -1023,10 +1023,10 @@
         "N"
       ],
       "action_description": "Cánh tay không thuận đặt ngang trước bụng làm đường chân trời, bàn tay thuận mở dần nâng từ dưới lên cao ngang vai mô phỏng mặt trời mọc buổi sáng.",
-      "num_samples": 7,
-      "num_signers": 7,
+      "num_samples": 60,
+      "num_signers": 28,
       "sources": {
-        "kaggle_vsl_v2": 4,
+        "kaggle_vsl_v2": 57,
         "kaggle_vsl": 3
       },
       "kaggle_clip_count": 3,
@@ -1044,10 +1044,10 @@
         "N"
       ],
       "action_description": "Cánh tay không thuận đặt ngang trước ngực làm đường chân trời, khuỷu tay thuận tựa lên rồi dựng thẳng cẳng tay thuận vuông góc lên trên (mô phỏng mặt trời đứng bóng buổi trưa).",
-      "num_samples": 7,
-      "num_signers": 7,
+      "num_samples": 60,
+      "num_signers": 28,
       "sources": {
-        "kaggle_vsl_v2": 4,
+        "kaggle_vsl_v2": 57,
         "kaggle_vsl": 3
       },
       "kaggle_clip_count": 3,
@@ -1065,10 +1065,10 @@
         "N"
       ],
       "action_description": "Hai bàn tay mở đặt cao ngang mặt/vai rồi khép hạ dần che ngang trước ngực (hoặc bàn tay thuận hạ xuống dưới cánh tay không thuận mô phỏng mặt trời lặn, trời tối).",
-      "num_samples": 7,
-      "num_signers": 7,
+      "num_samples": 58,
+      "num_signers": 28,
       "sources": {
-        "kaggle_vsl_v2": 4,
+        "kaggle_vsl_v2": 55,
         "kaggle_vsl": 3
       },
       "kaggle_clip_count": 3,
@@ -1086,10 +1086,10 @@
         "N"
       ],
       "action_description": "Ngón trỏ tay thuận vuốt ngang qua trán từ trái sang phải (mô phỏng gạt mồ hôi trời nóng) hoặc quạt nhẹ trước mặt theo biến thể QIPEDC vùng B/T/N.",
-      "num_samples": 7,
-      "num_signers": 7,
+      "num_samples": 96,
+      "num_signers": 29,
       "sources": {
-        "kaggle_vsl_v2": 4,
+        "kaggle_vsl_v2": 93,
         "kaggle_vsl": 3
       },
       "kaggle_clip_count": 3,

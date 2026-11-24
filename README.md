@@ -1,94 +1,72 @@
 # Nhận Diện Ngôn Ngữ Ký Hiệu Tay Tiếng Việt (VSL) — Phần 1: Pipeline Dữ Liệu (Quý)
 
-Pipeline chuẩn hóa **Phần 1: Dữ liệu** cho bài toán nhận diện **Ngôn ngữ ký hiệu tay tiếng Việt (Vietnamese Sign Language — VSL)** kết hợp **2 bộ dữ liệu công khai chuẩn trên Kaggle** (và tùy chọn bổ sung video tự quay):
+Pipeline chuẩn hóa **Phần 1: Dữ liệu** cho bài toán nhận diện **Ngôn ngữ ký hiệu tay tiếng Việt (Vietnamese Sign Language — VSL)** sử dụng **2 bộ dữ liệu VSL công khai có xác minh người ký hiệu trên Kaggle** (cấu hình mặc định **Phương án 1: Dual Kaggle-only**, không cần tự quay; vẫn giữ sẵn tool tự quay webcam `src/data/collect_videos.py` để bổ sung khi cần):
 
-1. **Bộ dữ liệu 1 — QIPEDC (`kaggle_vsl`)**: [`aresusayhi/vsl-vietnamese-sign-languages`](https://www.kaggle.com/datasets/aresusayhi/vsl-vietnamese-sign-languages) (v5, Apache 2.0, từ điển chuẩn Bộ GD&ĐT — `qipedc.moet.gov.vn`, 4.362 video, 3 biến thể vùng miền Bắc `B` / Trung `T` / Nam `N`).
-2. **Bộ dữ liệu 2 — VSL-v2 Cropped / VSL400 (`kaggle_vsl_v2`)**: [`nguyenanfms/vsl-vietnamese-sign-language-v2`](https://www.kaggle.com/datasets/nguyenanfms/vsl-vietnamese-sign-language-v2) (v8, **CC BY 4.0**, 472 từ vựng, **26.446 video `.mp4` 224×224 góc chính diện chuẩn MediaPipe Holistic**, đa người ký hiệu studio VSL400 có `signer_id` tường minh).
+1. **Bộ dữ liệu 1 — QIPEDC VSL (`kaggle_vsl`)**: [`aresusayhi/vsl-vietnamese-sign-languages`](https://www.kaggle.com/datasets/aresusayhi/vsl-vietnamese-sign-languages) (v5, Apache 2.0, từ điển chuẩn Bộ GD&ĐT — `qipedc.moet.gov.vn`). Trên 30 lớp phạm vi: **90 video `.mp4` thật (1280×720, 47.13 MiB)** từ **5 diễn viên ký hiệu đã xác minh trực quan** (`qipedc_signer_01`..`qipedc_signer_05` trong `configs/qipedc_signer_map.json`).
+2. **Bộ dữ liệu 2 — VSL-v2 Cropped / VSL400 (`kaggle_vsl_v2`)**: [`nguyenanfms/vsl-vietnamese-sign-language-v2`](https://www.kaggle.com/datasets/nguyenanfms/vsl-vietnamese-sign-language-v2) (v8, **CC BY 4.0**, 472 từ vựng, 26.446 clip góc chính diện 224×224 chuẩn MediaPipe Holistic). Trên 30 lớp phạm vi: **1.930 video `.mp4` thật (224×224, 222.79 MiB)** từ **26 người ký hiệu studio VSL400 có ground-truth `signer_id`** ánh xạ đầy đủ qua cả 7 phần `Part_1/split_1`..`Part_7/split_7/front_view.json` (0 clip online chưa xác minh).
 
-Khi kết hợp cả 2 bộ trên **30 lớp giao tiếp hằng ngày chuẩn (`configs/class_list.json` v1.3)**, nhóm đạt ngay **2.020 video VSL tiếng Việt thật** (**90 QIPEDC + 1.930 VSL-v2**, tức **58–96 clip/lớp** trên **8+ người ký hiệu tách biệt**) mà **KHÔNG cần tự quay video**, đồng thời đảm bảo **KHÔNG rò rỉ dữ liệu theo người (zero signer leakage)** và bàn giao trực tiếp cho **Phần 2: Tiền xử lý MediaPipe Holistic (Thiên)**.
+**Tổng cộng dữ liệu thực tế trên đĩa (`data/raw/`):** **2.020 video `.mp4` hợp lệ** (**269.92 MiB** video thô; **278.23 MiB** cả metadata), **30/30 lớp VSL** (**58–96 clip/lớp**, trung bình **67.33 clip/lớp**), **31 người ký hiệu đã xác minh danh tính**, chia tập tách biệt người ký hiệu và đồng nhất miền dữ liệu `val`/`test` với **0% rò rỉ**, sẵn sàng bàn giao cho **Phần 2: Tiền xử lý MediaPipe Holistic (Thiên)**.
+
+> Tài liệu trả lời đầy đủ 5 câu hỏi nghiên cứu và *Ghi chú của thành viên* theo **PHIẾU TÌM HIỂU VÀ PHÂN CÔNG NHÓM** xem tại: [docs/phieu_tim_hieu_phan_1_quy.md](docs/phieu_tim_hieu_phan_1_quy.md) (bản Word: [docs/Phieu_Tim_Hieu_Phan_1_Quy.docx](docs/Phieu_Tim_Hieu_Phan_1_Quy.docx)).
 
 ---
 
-## 1. Tổng quan 4 bước của Phần 1 (Dữ liệu)
+## 1. Tổng quan kết quả thực tế 4 bước của Phần 1 (Dữ liệu)
 
-| Bước | Tên bước | Module chính | Đầu ra tiêu chuẩn |
+| Bước | Tên bước | Module chính | Kết quả thực tế trong `data/` |
 | :--- | :--- | :--- | :--- |
-| **Bước 1** | **Chọn phạm vi** (Scope selection) | `configs/class_list.json`, `src/data/scope.py` | `data/manifests/scoped_manifest.csv`, `data/manifests/scope_report.json` |
-| **Bước 2** | **Thu thập & gán nhãn** (2 bộ Kaggle VSL và/hoặc tự quay) & Kiểm định | `src/data/download_kaggle.py`, `src/data/collect_videos.py`, `src/data/build_manifest.py` | `data/manifests/kaggle_manifest.csv`, `data/manifests/kaggle_v2_manifest.csv`, `data/manifests/dataset_manifest.csv`, `data/manifests/quality_report.json` |
-| **Bước 3** | **Chia tập dữ liệu — Chia theo người** (Signer-disjoint split) | `src/data/split_dataset.py` | `data/splits/train.csv`, `data/splits/val.csv`, `data/splits/test.csv`, `data/splits/split_report.json` |
-| **Bước 4** | **Tăng cường dữ liệu — CHỈ trên tập train** | `src/data/augment.py` | `data/augmented/train/<class_slug>/*.mp4`, `data/splits/train_augmented.csv`, `data/splits/augment_report.json` |
+| **Bước 1** | **Chọn phạm vi** (Scope selection) | `configs/class_list.json`, `src/data/scope.py` | `data/manifests/scoped_manifest.csv`: **2.020** video hợp lệ, **30/30** lớp (`missing_classes: []`), **31** người ký hiệu |
+| **Bước 2** | **Thu thập, xác minh người ký hiệu & kiểm định** | `src/data/download_kaggle.py`, `src/data/build_manifest.py`, `configs/qipedc_signer_map.json` | `data/manifests/dataset_manifest.csv`, `quality_report.json`, `signer_verification_report.json` (**2.020/2.020** valid, 0 corrupt, 0 unverified) |
+| **Bước 3** | **Chia tập theo người & cân bằng nguồn** (Signer-disjoint, Source-stratified) | `src/data/split_dataset.py` | `train.csv`: **1.417** (70.15%, 22 người, 41–66/lớp) · `val.csv`: **294** (14.55%, 4 người, 8–16/lớp) · `test.csv`: **309** (15.30%, 5 người, 9–14/lớp) · `leakage_check_passed: true` · `val_test_domain_matched: true` |
+| **Bước 4** | **Tăng cường dữ liệu — CHỈ trên tập train (2x)** | `src/data/augment.py` | `data/splits/train_augmented.csv`: **4.251** hàng (**1.417** gốc + **2.834** tăng cường 2x, 123–198/lớp, trung bình 141.70/lớp, `allow_hflip: false`) · `val.csv`/`test.csv` giữ nguyên 100% |
 
 ---
 
-## 2. Nguồn dữ liệu VSL công khai & So sánh
+## 2. Bảng so sánh các bộ dữ liệu công khai & Lựa chọn cuối cùng
 
-### 2.1. Hai bộ dữ liệu chính được tích hợp sẵn (`configs/data_config.yaml`)
+| Dataset | Ngôn ngữ | Dạng dữ liệu | Quy mô (mẫu) | Số lớp | Người ký hiệu (`signer_id`) | Giấy phép | Đánh giá mức độ phù hợp với đề tài VSL |
+| :--- | :--- | :--- | :---: | :---: | :--- | :--- | :--- |
+| **ASL Alphabet** (Kaggle) | Tiếng Anh (ASL) | Ảnh tĩnh bàn tay (200×200) | 87.000 ảnh | 29 (A–Z + 3 lệnh) | 1 người quay lặp | GPLv2 / Public | **Không phù hợp cho từ động VSL**: chỉ là chữ cái tĩnh tiếng Anh, không có chuỗi chuyển động thời gian cho LSTM/BiLSTM |
+| **WLASL** (Word-Level ASL) | Tiếng Anh (ASL) | Video từ đơn động (`.mp4`) | 21.083 clip | 2.000 từ (subsets 100/300/1000/2000) | 119 người (nhiều nguồn web) | C-UDA (Học thuật) | **Tham khảo kiến trúc, không đúng ngôn ngữ**: chất lượng benchmark tốt cho LSTM/BiLSTM nhưng là ký hiệu Mỹ (ASL), không dùng cho tiếng Việt |
+| **MS-ASL** (Microsoft ASL) | Tiếng Anh (ASL) | Video YouTube động (URL) | 25.513 clip | 1.000 từ | 222 người | C-UDA (Học thuật) | **Không phù hợp**: là ASL và nhiều link YouTube gốc đã chết theo thời gian, khó tái lập trọn vẹn trong 2–3 tuần |
+| **QIPEDC VSL** (`aresusayhi/vsl-vietnamese-sign-languages`) | **Tiếng Việt (VSL)** | Video từ điển động 1280×720 (`.mp4`) | 4.362 clip (90 clip cho 30 lớp giao nhau) | 3.315 từ | **5 diễn viên đã xác minh trực quan** (`qipedc_signer_01..05`; 26 cặp trùng lặp B/T/N đã gom nhóm) | **Apache 2.0** | **Chọn (Bộ 1 — Bổ trợ tập Train)**: chuẩn từ điển Bộ GD&ĐT Việt Nam, độ chính xác ngôn ngữ cao; dùng toàn bộ 90 clip (5 diễn viên) vào `train` để tăng đa dạng góc/nền mà không lệch phân phối `val`/`test` |
+| **VSL-v2 Cropped / VSL400** (`nguyenanfms/vsl-vietnamese-sign-language-v2`) | **Tiếng Việt (VSL)** | Video động 224×224 góc chính diện (`.mp4`) | 26.446 clip (**1.930 clip** cho 30 lớp giao nhau) | 472 từ | **26 người ký hiệu studio VSL400 có ground-truth `signer_id`** (`vsl2_signer_001`..`028`, 100% phủ đủ 30/30 lớp) | **CC BY 4.0** | **Chọn (Bộ 2 — Xương sống chính)**: quy mô lớn, đa người ký hiệu thật có `front_view.json` chuẩn xác, 224×224 tối ưu cho MediaPipe Holistic; loại bỏ `processed_augmented/` để chống rò rỉ |
+| **ViSignLanguage-Video** (`star092304/ViSignLanguage-Video`, PTIT) | Tiếng Việt (VSL) | Video động 224×224 (`.mp4`, 864 MB) | 3.875 clip | 100 từ | Không có `signer_id` tường minh | CC BY 4.0 | **Dự phòng (Không chọn làm chính)**: tải nhẹ nhưng chỉ giao 22 lớp với QIPEDC, thiếu nhãn `signer_id` nên không đảm bảo chia tập chống rò rỉ theo người |
 
-| Thuộc tính | Dataset 1: QIPEDC (`kaggle_vsl`) | Dataset 2: VSL-v2 Cropped (`kaggle_vsl_v2`) |
-| :--- | :--- | :--- |
-| **Slug Kaggle** | `aresusayhi/vsl-vietnamese-sign-languages` | `nguyenanfms/vsl-vietnamese-sign-language-v2` |
-| **Giấy phép** | Apache 2.0 | CC BY 4.0 |
-| **Quy mô toàn bộ** | ~20.77 GB (4.362 clip, 3.315 nhãn) | ~82.37 GB full / ~10 GB `processed` (26.446 clip, 472 nhãn) |
-| **Độ phân giải / Góc quay** | Video từ điển QIPEDC `.mp4` | 224×224 cắt gọn góc chính diện (`front_view`), sẵn sàng cho MediaPipe |
-| **Định danh người ký hiệu** | Suy luận từ hậu tố vùng: `B` (`kaggle_signer_north`), `T` (`kaggle_signer_central`), `N` (`kaggle_signer_south`) | Ánh xạ `video_id → vsl2_signer_<id>` từ `raw/raw/VSL400/Part_*/split_*/front_view.json` (ví dụ `001`, `002`, `003`, `004`, `006`) |
-| **Chống rò rỉ dữ liệu** | Chỉ lấy clip gốc từ `Dataset/Videos/` | Tự động **bỏ qua `processed_augmented/`** (`exclude_pre_augmented: true`) để không rò rỉ trước Bước 3 |
-| **Đóng góp trên 30 lớp chuẩn** | **90 clip** (đủ 3 vùng `B`/`T`/`N` cho 30/30 lớp) | **1.930 clip** (55–93 clip/lớp đa người ký hiệu) |
+### Lý do điều chỉnh Bước 2: Dùng 2 bộ dữ liệu VSL công khai có xác minh thay cho tự quay webcam thủ công
 
-- **Tổng hợp giao nhau giữa 2 bộ**: 151 nhãn giao nhau, trong đó 48 nhãn có đồng thời `>= 3` vùng QIPEDC và 55–93 clip đa người trong VSL-v2. Danh mục **`configs/class_list.json` (v1.3)** chọn 30 lớp giao tiếp hằng ngày tốt nhất (`giúp đỡ`, `muốn`, `tiếp tục`, `từ chối`, `địa chỉ`, `bạn`, `buổi sáng`, ...) → **2.020 video thật trên 8+ người ký hiệu**.
+Theo kế hoạch sơ bộ trong phiếu phân công, Bước 2 dự kiến tự quay webcam nhiều người. Sau khi khảo sát thực tế trong Giai đoạn tìm hiểu (Ngày 1–3), nhóm thống nhất **điều chỉnh Bước 2 sang kết hợp 2 bộ dataset VSL công khai đã xác minh người ký hiệu (`QIPEDC` + `VSL-v2/VSL400`)** dựa trên 4 lý do kỹ thuật rõ ràng:
 
-### 2.2. Các bộ dữ liệu VSL công khai dự phòng (Runner-ups để tham khảo)
-
-| Bộ dữ liệu | Nền tảng & Dung lượng | Ưu điểm | Hạn chế so với VSL-v2 |
-| :--- | :--- | :--- | :--- |
-| **`star092304/ViSignLanguage-Video`** (mirror `namwu/ViSignLanguage-Video`) | HuggingFace (CC BY 4.0, **864 MB**, 3.875 clip, 100 lớp, PTIT AI Challenge) | Tải siêu nhẹ, không cần Kaggle API key, `.mp4` 224×224 | Chỉ giao 22 lớp với QIPEDC (chỉ 2 lớp có đủ 3 vùng B/T/N), không có `signer_id` tường minh, một số nhãn bị lỗi mã hóa NFD |
-| **`bowboochua9/vsl400`** | Kaggle (72.2 GB, 400 lớp, 1080p 3 góc `front`/`left`/`right`) | Độ phân giải Full HD 1080p, có `signer_id` tường minh | Đã được nhúng sẵn bên trong `nguyenanfms/vsl-vietnamese-sign-language-v2` (VSL-v2 còn bổ sung thêm 72 từ vựng + bản cắt gọn 224×224 + giấy phép CC BY 4.0) |
+1. **Khung thời gian dự án 2–3 tuần**: Để đạt quy mô tương đương **2.020 video** trên **30 lớp** và **31 người ký hiệu**, tự quay thủ công đòi hỏi huy động >25 tình nguyện viên, tổ chức phòng quay, gán nhãn và kiểm duyệt lại mất ít nhất 2–3 tuần — làm trễ toàn bộ Phần 2 (Thiên), Phần 3 (Hiếu) và Phần 4 (Linh).
+2. **Độ chuẩn xác ngôn ngữ ký hiệu (Linguistic Validity)**: Các thành viên không phải người khiếm thính hay thông dịch viên VSL chuyên nghiệp; tự học rồi tự quay rất dễ sai hình bàn tay (handshape), vị trí đặt tay hoặc sắc thái biểu cảm. Ngược lại, **QIPEDC** do Bộ GD&ĐT chuẩn hóa và **VSL400** được ghi hình bài bản với người ký hiệu chuẩn.
+3. **Quy mô và độ đa dạng vượt trội cho chia tập theo người**: 31 người ký hiệu xác minh (26 người studio VSL-v2 phủ trọn 30/30 lớp + 5 diễn viên QIPEDC) cho phép tập `val` có **294 video (4 người, 8–16 clip/lớp)** và tập `test` có **309 video (5 người, 9–14 clip/lớp)** — đảm bảo ước lượng F1-score và confusion matrix đáng tin cậy về mặt thống kê.
+4. **Vẫn sẵn sàng mở rộng tự quay bổ sung**: Bộ công cụ `src/data/collect_videos.py` và hướng dẫn [docs/collection_guide.md](docs/collection_guide.md) vẫn được giữ đầy đủ và kiểm thử sẵn sàng — nếu Thiên/Hiếu phân tích lỗi ở Phần 3 phát hiện lớp nào cần thêm mẫu thực tế webcam, nhóm chỉ cần quay bổ sung và chạy lại với cờ `--hybrid`.
 
 ---
 
-## 3. Cấu hình mặc định: Phương án 1 (Dual Kaggle-only — Không cần tự quay)
+## 3. Kiểm toán xác minh người ký hiệu & Chống rò rỉ dữ liệu
 
-Dự án đã khóa **Phương án 1 (`scope.kaggle_only: true`, `download_kaggle --dataset all`)** làm cấu hình **MẶC ĐỊNH**: chạy trực tiếp `scripts/run_quy_pipeline.py` sẽ vận hành trên **dữ liệu thật** trong `data/manifests/` và `data/splits/` từ 2 bộ Kaggle (`kaggle_vsl` + `kaggle_vsl_v2`) với 0 video tự quay. Nếu muốn bổ sung video tự quay, chỉ cần thêm cờ `--hybrid` (hoặc `--include-self`).
+Kết quả kiểm toán được lưu đầy đủ tại `data/manifests/signer_verification_report.json`:
 
-### Lệnh chạy nhanh (Production)
-
-```powershell
-# 1. Chạy Production trọn gói 4 bước trên dữ liệu đã lập chỉ mục trong data/manifests/ hoặc data/raw/
-python scripts/run_quy_pipeline.py --config configs/data_config.yaml
-
-# 2. Tải & lập chỉ mục CẢ 2 bộ Kaggle rồi chạy trọn gói 4 bước (mặc định không tự quay)
-python scripts/run_quy_pipeline.py --download-all-kaggle --config configs/data_config.yaml
-
-# 3. Chạy Production với 2 thư mục Kaggle đã tải sẵn trên máy
-python scripts/run_quy_pipeline.py `
-  --kaggle-local-dir "D:\datasets\vsl-qipedc" `
-  --kaggle-v2-local-dir "D:\datasets\vsl-v2" `
-  --config configs/data_config.yaml
-```
-
-### Chạy từng bước riêng lẻ (Mặc định Phương án 1)
-
-```powershell
-# Bước 2a: Tải & lập chỉ mục mặc định CẢ 2 bộ Kaggle (--dataset mặc định = "all")
-python -m src.data.download_kaggle --config configs/data_config.yaml
-
-# Bước 2b: Hợp nhất kaggle_manifest.csv + kaggle_v2_manifest.csv (bỏ qua self_recorded) & kiểm định
-python -m src.data.build_manifest --config configs/data_config.yaml --kaggle-only
-
-# Bước 1: Lọc phạm vi 30 lớp chuẩn (mặc định scope.kaggle_only: true -> >= 3 mẫu & >= 3 người/lớp)
-python -m src.data.scope --config configs/data_config.yaml
-
-# Bước 3: Chia tập tách biệt tuyệt đối theo signer_id (zero signer leakage)
-python -m src.data.split_dataset --config configs/data_config.yaml --kaggle-only
-
-# Bước 4: Tăng cường CHỈ trên tập train (mặc định 4x trong --kaggle-only, allow_hflip=False)
-python -m src.data.augment --config configs/data_config.yaml --kaggle-only
-```
+1. **Xác minh trực quan 90 video QIPEDC (`configs/qipedc_signer_map.json`)**:
+   - Kiểm tra trực quan ghép ảnh khuôn mặt/trang phục + đo sai khác pixel khung giữa (`mid_frame_mad`) chứng minh **hậu tố vùng `B`/`T`/`N` KHÔNG phải 3 người khác nhau**: thực tế chỉ có **5 diễn viên** (`qipedc_signer_01`: 32 clip / 20 lớp; `qipedc_signer_02`: 16 clip / 10 lớp; `qipedc_signer_03`: 33 clip / 20 lớp; `qipedc_signer_04`: 5 clip / 4 lớp; `qipedc_signer_05`: 4 clip / 2 lớp).
+   - Phát hiện **26 cặp video gần như giống hệt nhau** giữa các vùng `B`/`T`/`N` (chỉ khác watermark góc, `mid_frame_mad < 1.5`). Toàn bộ 26 cặp này đã được gán **cùng một `qipedc_signer_0X`** (`all_duplicates_grouped_under_same_signer: true`).
+2. **Xác minh ground-truth 1.930 video VSL-v2 (`Part_1..Part_7/split_*/front_view.json`)**:
+   - Đọc đầy đủ 24.753 bản ghi từ tất cả 7 phần `VSL400`; **100% (1.930/1.930)** video thuộc 30 lớp đều có `signer_id` gốc chính xác (**26 người ký hiệu studio** `vsl2_signer_001`..`028`, mỗi người phủ đủ **30/30 lớp**; 0 clip online không rõ danh tính).
+   - Parser loại trừ hoàn toàn thư mục `processed_augmented/` (`exclude_pre_augmented: true`).
+3. **Chiến lược chia tập đồng nhất miền `val`/`test` (`src/data/split_dataset.py`)**:
+   - Vì 5 diễn viên QIPEDC chỉ phủ một phần lớp (2–20/30 lớp) và có 26 cặp trùng lặp, toàn bộ **5 diễn viên QIPEDC (90 clip)** được đưa vào **`train`**, còn **26 người ký hiệu studio VSL-v2 (1.930 clip)** được chia tách biệt người vào `train` (17 người, 1.327 clip), `val` (4 người, 294 clip), và `test` (5 người, 309 clip).
+   - Kết quả: **`val` và `test` có phân phối nguồn giống hệt 100%** (`kaggle_vsl_v2: 1.0`, `max_val_test_source_ratio_diff: 0.0`, `val_test_domain_matched: true`), **0% rò rỉ người ký hiệu** (`train ∩ val = train ∩ test = val ∩ test = ∅`).
+4. **Tăng cường dữ liệu nhất quán 2x — CHỈ trên tập `train` (`src/data/augment.py`)**:
+   - Tham số nhân bản được thống nhất **100% là `2x`** trên toàn hệ thống (`configs/data_config.yaml`: `num_augments_per_sample: 2` & `kaggle_only_num_augments_per_sample: 2`; `split_report.json`: `recommended_train_aug_copies: 2`; `augment_report.json`: `num_augmentations_per_video: 2`).
+   - Từ **1.417** video train gốc sinh thêm **2.834** video tăng cường → tổng **4.251** mẫu train (**123–198 mẫu/lớp**, trung bình **141.70 mẫu/lớp**).
+   - Chốt chặn cứng `ensure_train_only_manifest` lập tức ném `ValueError("Augmentation is strictly allowed on train split only!")` nếu bất kỳ hàng nào có `split != "train"`. `allow_hflip: false` mặc định để không đảo tay thuận của ký hiệu VSL bất đối xứng.
 
 ---
 
-## 4. Cài đặt môi trường & thiết lập Kaggle
+## 4. Cài đặt môi trường & Chạy Pipeline (Production)
 
-### 4.1. Cài đặt thư viện Python (Python 3.10+)
+### 4.1. Cài đặt Python 3.10+ và xác thực Kaggle
 
 ```powershell
 python -m venv .venv
@@ -96,21 +74,31 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-### 4.2. Cấu hình xác thực Kaggle
+Đặt `kaggle.json` tại `C:\Users\<USER>\.kaggle\kaggle.json` (hoặc đặt biến môi trường `$env:KAGGLE_USERNAME`, `$env:KAGGLE_KEY`).
 
-Chọn **1 trong 2 cách**:
-1. Đặt file `kaggle.json` (tải từ *Kaggle → Settings → Create New Token*) vào `C:\Users\<USER>\.kaggle\kaggle.json`.
-2. Hoặc đặt biến môi trường PowerShell:
-   ```powershell
-   $env:KAGGLE_USERNAME = "ten_tai_khoan_kaggle"
-   $env:KAGGLE_KEY = "api_key_cua_ban"
-   ```
-
-Kiểm tra nhanh metadata nhãn (tải siêu nhẹ, không tải hàng chục GB video):
+### 4.2. Tải video thật theo phạm vi 30 lớp & Chạy trọn gói 4 bước
 
 ```powershell
-python -m src.data.download_kaggle --dataset qipedc --only-labels
-python -m src.data.download_kaggle --dataset vsl_v2 --only-labels
+# Tải 2.020 video thật đúng phạm vi 30 lớp (269.92 MiB) & lập chỉ mục cả 2 bộ Kaggle
+python -m src.data.download_kaggle --dataset all --sync-videos --workers 12 --config configs/data_config.yaml
+
+# Chạy trọn gói 4 bước trên dữ liệu thật (mặc định Phương án 1: Dual Kaggle-only)
+python scripts/run_quy_pipeline.py --config configs/data_config.yaml
+```
+
+Hoặc chạy từng bước riêng lẻ:
+
+```powershell
+python -m src.data.build_manifest --config configs/data_config.yaml --kaggle-only
+python -m src.data.scope --config configs/data_config.yaml
+python -m src.data.split_dataset --config configs/data_config.yaml --kaggle-only
+python -m src.data.augment --config configs/data_config.yaml --kaggle-only --workers 8
+```
+
+Tùy chọn bổ sung tự quay webcam (chế độ Hybrid):
+```powershell
+python -m src.data.collect_videos --signer-id signer_01 --class-id 0 --num-takes 5 --duration 2.5 --fps 30
+python scripts/run_quy_pipeline.py --hybrid --config configs/data_config.yaml
 ```
 
 ---
@@ -120,116 +108,58 @@ python -m src.data.download_kaggle --dataset vsl_v2 --only-labels
 ```text
 Nhan dien ki hieu/
 ├── configs/
-│   ├── data_config.yaml          # Cấu hình trung tâm (QIPEDC + VSL-v2, scope, split, augment)
-│   └── class_list.json           # 30 lớp VSL giao nhau cả 2 bộ Kaggle (v1.3) + mô tả động tác tay
+│   ├── data_config.yaml            # Cấu hình trung tâm (QIPEDC + VSL-v2, scope, split, augment 2x)
+│   ├── class_list.json             # 30 lớp VSL giao nhau cả 2 bộ Kaggle (v1.3) + mô tả động tác tay
+│   ├── qipedc_signer_map.json      # Bảng ánh xạ 90 clip QIPEDC -> 5 diễn viên xác minh trực quan
+│   └── preprocess_config.yaml      # Cấu hình Giai đoạn 2 (Thiên — MediaPipe Holistic)
 ├── docs/
-│   └── collection_guide.md       # SOP hướng dẫn tự quay đa người & chế độ chỉ dùng Kaggle
+│   ├── phieu_tim_hieu_phan_1_quy.md # Phiếu tìm hiểu Phần 1 (5 câu hỏi + Ghi chú của Quy)
+│   ├── Phieu_Tim_Hieu_Phan_1_Quy.docx # Bản Word chuẩn nộp phiếu tìm hiểu Phần 1 (Quy)
+│   ├── collection_guide.md         # SOP quay webcam đa người & chế độ Dual Kaggle-only
+│   └── preprocess_guide.md         # Tài liệu Giai đoạn 2 (Thiên)
 ├── scripts/
-│   └── run_quy_pipeline.py       # CLI chạy trọn gói 4 bước trên dữ liệu thật (data/manifests/, data/splits/)
+│   ├── run_quy_pipeline.py         # CLI chạy trọn gói Phần 1 trên dữ liệu sản xuất thật
+│   └── run_thien_preprocess.py     # CLI chạy Phần 2 (Thiên) trên dữ liệu sản xuất thật
 ├── src/
-│   └── data/
-│       ├── __init__.py
-│       ├── schema.py             # Shared contract: MANIFEST_COLUMNS, KAGGLE_SOURCES, validator, probe
-│       ├── download_kaggle.py    # Tải & lập chỉ mục QIPEDC (kaggle_vsl) + VSL-v2 (kaggle_vsl_v2)
-│       ├── scope.py              # Bước 1: Lọc phạm vi theo class_list / top_k / min_samples / all
-│       ├── collect_videos.py     # Bước 2: Tool quay webcam tương tác đa người (tùy chọn Hybrid)
-│       ├── build_manifest.py     # Bước 2: Hợp nhất đa nguồn & xuất quality_report.json
-│       ├── split_dataset.py      # Bước 3: Chia train/val/test tách biệt tuyệt đối theo signer_id
-│       └── augment.py            # Bước 4: Tăng cường video an toàn cho VSL (CHỈ tập train)
+│   ├── data/                       # Phần 1 (Quý): schema, download_kaggle, scope, collect_videos, build_manifest, split_dataset, augment
+│   └── preprocess/                 # Phần 2 (Thiên): landmark_schema, extract_landmarks, normalize, sequence, build_features
 ├── tests/
-│   └── test_quy_pipeline.py      # Bộ kiểm thử tự động pytest cho cả Hybrid & Dual-Kaggle-only
-├── data/                         # Dữ liệu video thật, manifest, splits, augmented
+│   ├── test_quy_pipeline.py        # Bộ kiểm thử tự động pytest Phần 1
+│   └── test_thien_preprocess.py    # Bộ kiểm thử tự động pytest Phần 2
+├── data/
+│   ├── raw/                        # 2.020 video thật (269.92 MiB .mp4; bị .gitignore khỏi Git)
+│   ├── manifests/                  # Manifests & báo cáo (scoped_manifest.csv, quality/scope/signer_verification reports)
+│   ├── splits/                     # train.csv (1.417), val.csv (294), test.csv (309), train_augmented.csv (4.251), split/augment reports
+│   ├── augmented/train/            # 2.834 video tăng cường tập train (bị .gitignore khỏi Git)
+│   └── pipeline_summary.json       # Tổng hợp kết quả sản xuất (mode: "production_kaggle_only")
 ├── requirements.txt
 └── README.md
 ```
 
 ---
 
-## 6. Chế độ kết hợp tự quay (Hybrid — Tùy chọn)
+## 6. Đặc tả bàn giao cho Phần 2 — Tiền xử lý MediaPipe Holistic (Thiên)
 
-Nếu muốn bổ sung thêm người ký hiệu tự quay qua webcam bên cạnh 2 bộ Kaggle, xem quy trình chuẩn tại [docs/collection_guide.md](docs/collection_guide.md):
+### 6.1. Bảng số liệu các tập bàn giao chính thức
 
-```powershell
-# Quay video webcam cho signer_01 với lớp class_id=0 ("giúp đỡ"), 5 lượt quay
-python -m src.data.collect_videos --signer-id signer_01 --class-id 0 --num-takes 5 --duration 2.5 --fps 30
+| Tệp bàn giao | Số mẫu | Tỷ lệ | Số người ký hiệu | Số mẫu/lớp (min–max / TB) | Phân bố nguồn | Ghi chú cho Thiên |
+| :--- | :---: | :---: | :---: | :---: | :--- | :--- |
+| `data/splits/train.csv` | **1.417** | 70.15% | **22** (5 QIPEDC + 17 VSL-v2) | 41–66 (TB 47.23) | `kaggle_vsl`: 90 · `kaggle_vsl_v2`: 1.327 | Video gốc tập train |
+| `data/splits/train_augmented.csv` | **4.251** | — | **22** (giống `train.csv`) | 123–198 (TB 141.70) | `kaggle_vsl`: 270 · `kaggle_vsl_v2`: 3.981 | **Đầu vào huấn luyện chính** (1.417 gốc + 2.834 tăng cường 2x) |
+| `data/splits/val.csv` | **294** | 14.55% | **4** (`vsl2_signer_006, 013, 020, 025`) | 8–16 (TB 9.80) | `kaggle_vsl_v2`: 294 (100%) | Video gốc hoàn toàn mới người |
+| `data/splits/test.csv` | **309** | 15.30% | **5** (`vsl2_signer_007, 016, 023, 027, 028`) | 9–14 (TB 10.30) | `kaggle_vsl_v2`: 309 (100%) | Video gốc kiểm thử cuối cùng, đồng nhất miền với `val` |
 
-# Chạy trọn gói 4 bước hợp nhất Kaggle + tự quay (bật cờ --hybrid / --include-self)
-python scripts/run_quy_pipeline.py --hybrid --config configs/data_config.yaml
-```
+### 6.2. Cấu trúc 16 cột chuẩn (`MANIFEST_COLUMNS` trong `src/data/schema.py`)
 
-### Các phép tăng cường an toàn cho VSL (`src/data/augment.py`)
-1. **Biến đổi tốc độ thời gian (`speed`)**: nội suy khung hình trong khoảng `0.85x – 1.15x`.
-2. **Cắt biên thời gian nhẹ (`trim`)**: cắt tối đa 8% đầu/cuối clip mà vẫn giữ trọn phần cử chỉ chính.
-3. **Biến đổi không gian Affine an toàn (`affine`)**: xoay `±8°`, thu phóng `0.92 – 1.08`, dịch `±4%`, dùng `cv2.BORDER_REPLICATE` cố định trên toàn bộ clip để giữ trọn tay và thân trên.
-4. **Biến thiên ánh sáng & nhiễu nhẹ (`light`)**: độ tương phản `0.88 – 1.12`, độ sáng `±20`, nhiễu Gaussian nhẹ.
-5. **Lật ngang (`allow_hflip`) — MẶC ĐỊNH TẮT (`False`)**:
-   > **Cảnh báo**: Lật ngang khung hình sẽ đảo tay trái ↔ tay phải, làm thay đổi tay thuận và hướng chuyển động của các ký hiệu VSL bất đối xứng (có thể đổi nghĩa ký hiệu hoặc làm sai lệch đặc trưng Left/Right Hand của MediaPipe Holistic). Chỉ bật `--allow-hflip` nếu toàn bộ tập nhãn đã được xác minh đối xứng hoàn toàn.
+Mọi file CSV đều lưu UTF-8 with BOM (`utf-8-sig`) gồm đúng 16 cột:
+`sample_id`, `video_path`, `label`, `class_id` (`0..29`), `signer_id`, `source` (`kaggle_vsl` | `kaggle_vsl_v2` | `self_recorded`), `split` (`train` | `val` | `test`), `is_augmented` (`bool`), `parent_sample_id`, `aug_type`, `fps`, `num_frames`, `duration_sec`, `width`, `height`, `is_valid`.
 
----
-
-## 7. Cam kết chống rò rỉ dữ liệu (Data Leakage Prevention Guarantees)
-
-Pipeline thực thi **4 chốt chặn cứng (hard guards)** ở mức code:
-1. **Loại bỏ video đã tăng cường sẵn từ nguồn ngoài (`exclude_pre_augmented: true`)**: parser VSL-v2 tự động bỏ qua `processed_augmented/` để đảm bảo mọi video vào Bước 3 đều là bản gốc.
-2. **Tách biệt tuyệt đối người ký hiệu (`verify_no_signer_leakage`)**:
-   - `set(train.signer_id) ∩ set(val.signer_id) == ∅`
-   - `set(train.signer_id) ∩ set(test.signer_id) == ∅`
-   - `set(val.signer_id) ∩ set(test.signer_id) == ∅`
-3. **Thứ tự bắt buộc: Chia tập TRƯỚC, Tăng cường SAU**:
-   - `split_dataset.py` từ chối đầu vào nếu phát hiện bất kỳ hàng nào có `is_augmented == True`.
-4. **Tăng cường CHỈ trên tập `train` (`ensure_train_only_manifest`)**:
-   - `augment.py` kiểm tra toàn bộ cột `split` ngay khi đọc CSV; nếu tồn tại **bất kỳ hàng nào** có `split != "train"`, lập tức ném `ValueError("Augmentation is strictly allowed on train split only!")`.
-   - `val.csv` và `test.csv` **không bao giờ** bị đọc hay chỉnh sửa bởi bước tăng cường.
+- Đọc manifest bằng `src.data.schema.load_manifest_df(path, validate=True, require_split=True)`.
+- Trích xuất landmark độc lập từng split (`train_augmented.csv`, `val.csv`, `test.csv`), không fit scaler trên `val`/`test`.
 
 ---
 
-## 8. Đặc tả bàn giao cho Phần 2 — Tiền xử lý MediaPipe Holistic (Thiên)
-
-### 8.1. Danh sách tệp bàn giao
-
-| Tệp bàn giao | Vai trò cho Phần 2 (MediaPipe Holistic) |
-| :--- | :--- |
-| `data/splits/train_augmented.csv` | Danh sách video huấn luyện (gồm video gốc `is_augmented=False` + video tăng cường `is_augmented=True`) |
-| `data/splits/val.csv` | Danh sách video validation (chỉ video gốc, người ký hiệu tách biệt hoàn toàn với train & test) |
-| `data/splits/test.csv` | Danh sách video kiểm thử cuối cùng (chỉ video gốc, không dùng để chỉnh siêu tham số) |
-| `data/manifests/scope_report.json` | Danh sách lớp hoạt động (`class_id`, `label`, `slug`, `handedness`, `qipedc_variants`, `action_description`, `kaggle_clip_count`, `kaggle_v2_clip_count`) |
-| `data/splits/split_report.json` | Chứng nhận `leakage_check_passed: true`, danh sách `signer_id` và số mẫu từng lớp trên mỗi tập |
-
-### 8.2. Cấu trúc 16 cột chuẩn (`MANIFEST_COLUMNS` trong `src/data/schema.py`)
-
-Mọi file CSV (`dataset_manifest.csv`, `scoped_manifest.csv`, `train.csv`, `val.csv`, `test.csv`, `train_augmented.csv`) đều tuân thủ chính xác cùng 16 cột (UTF-8 with BOM `utf-8-sig`):
-
-| # | Tên cột | Kiểu dữ liệu | Mô tả & Quy ước |
-| :-: | :--- | :--- | :--- |
-| 1 | `sample_id` | `str` | Mã định danh duy nhất của từng mẫu (ví dụ: `kaggle_d0001b`, `vsl2_vsl2_signer_001_giup_do_v01`, `..._aug1`) |
-| 2 | `video_path` | `str` | Đường dẫn tương đối chuẩn POSIX (`/`) tính từ thư mục gốc dự án |
-| 3 | `label` | `str` | Nhãn tiếng Việt có dấu chuẩn NFC (ví dụ: `"giúp đỡ"`, `"muốn"`, `"tiếp tục"`) |
-| 4 | `class_id` | `int` | Chỉ số lớp số nguyên liên tục `0 .. N-1` dùng trực tiếp làm target cho mô hình |
-| 5 | `signer_id` | `str` | Mã người ký hiệu (`kaggle_signer_north/central/south`, `vsl2_signer_001..`, `signer_01..`) |
-| 6 | `source` | `str` | Nguồn dữ liệu: `"kaggle_vsl"`, `"kaggle_vsl_v2"`, hoặc `"self_recorded"` |
-| 7 | `split` | `str` | Phân vùng tập dữ liệu: `"train"`, `"val"`, hoặc `"test"` (rỗng trước Bước 3) |
-| 8 | `is_augmented` | `bool` | `False` với video gốc; `True` với video tăng cường (chỉ xuất hiện trong `train_augmented.csv`) |
-| 9 | `parent_sample_id` | `str` | `sample_id` của video gốc nếu `is_augmented=True`; chuỗi rỗng `""` với video gốc |
-| 10 | `aug_type` | `str` | Mô tả phép tăng cường đã áp dụng (`speed(...)+affine(...)+light(...)`); rỗng với video gốc |
-| 11 | `fps` | `float` | Tốc độ khung hình đo thực tế bằng OpenCV |
-| 12 | `num_frames` | `int` | Tổng số khung hình đọc được |
-| 13 | `duration_sec` | `float` | Thời lượng clip tính bằng giây (`num_frames / fps`) |
-| 14 | `width` | `int` | Chiều rộng khung hình (px) |
-| 15 | `height` | `int` | Chiều cao khung hình (px) |
-| 16 | `is_valid` | `bool` | `True` nếu video mở được và đọc được khung hình hợp lệ bằng OpenCV |
-
-### 8.3. Lưu ý kỹ thuật khi Thiên đọc dữ liệu vào MediaPipe Holistic
-
-- Đọc manifest bằng `src.data.schema.load_manifest_df(path, validate=True, require_split=True)` để giữ đúng kiểu chuỗi cho `signer_id` / `sample_id`.
-- Ghép `Path(project_root) / row["video_path"]` để mở video bằng `cv2.VideoCapture`.
-- Trích xuất landmark độc lập theo từng split (`train_augmented.csv` → `features/train/`, `val.csv` → `features/val/`, `test.csv` → `features/test/`), đặt tên file theo `sample_id` (ví dụ `<sample_id>.npz`) để bảo toàn truy vết `parent_sample_id` và `signer_id`.
-- Không áp dụng chuẩn hóa/thống kê (mean/std scaler) trên `val` hoặc `test`: chỉ `fit` bộ chuẩn hóa trên tập `train`.
-
----
-
-## 9. Kiểm thử tự động (Automated Tests)
-
-Chạy toàn bộ bộ test (bao gồm kiểm thử kết hợp 2 bộ Kaggle, chế độ `--kaggle-only`, chế độ Hybrid, chia tập không rò rỉ người ký hiệu và chốt chặn từ chối tăng cường trên `val`/`test`):
+## 7. Kiểm thử tự động (Automated Tests)
 
 ```powershell
 pytest -v

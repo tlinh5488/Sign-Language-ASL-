@@ -24,6 +24,7 @@ import argparse
 import hashlib
 import json
 import logging
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -470,6 +471,7 @@ def augment_train_manifest(
     project_root: str | Path | None = None,
     aug_config: AugmentConfig | None = None,
     kaggle_only: bool = False,
+    max_workers: int = 6,
 ) -> dict[str, Any]:
     """Generate train-only augmented videos and write ``train_augmented.csv``.
 
@@ -558,6 +560,7 @@ def augment_train_manifest(
     skipped_invalid = 0
     failed_videos: list[str] = []
 
+    work_items: list[tuple[dict[str, Any], str, Path]] = []
     for _, row in orig_df.iterrows():
         is_valid_val = row["is_valid"]
         if isinstance(is_valid_val, str):
@@ -568,14 +571,13 @@ def augment_train_manifest(
             skipped_invalid += 1
             continue
 
-        sample_id = str(row["sample_id"]).strip()
         label = str(row["label"]).strip()
         class_slug = slug_lookup.get(label) or slugify_label(label)
+        (out_vid_root / class_slug).mkdir(parents=True, exist_ok=True)
 
         raw_vpath = Path(str(row["video_path"]))
         src_video_path = raw_vpath if raw_vpath.is_absolute() else (root_dir / raw_vpath)
         if not src_video_path.exists():
-            # Fallback relative to train_manifest directory if needed
             alt_path = train_csv.parent / raw_vpath
             if alt_path.exists():
                 src_video_path = alt_path
@@ -584,8 +586,18 @@ def augment_train_manifest(
                 logger.warning("Skipping missing source train video: %s", src_video_path)
                 continue
 
-        frames, fps = read_video_frames(src_video_path)
+        work_items.append((row.to_dict(), class_slug, src_video_path))
 
+    def _augment_single_clip(
+        item: tuple[dict[str, Any], str, Path],
+    ) -> tuple[list[dict[str, Any]], list[str]]:
+        row_dict, class_slug, src_video_path = item
+        sample_id = str(row_dict["sample_id"]).strip()
+        label = str(row_dict["label"]).strip()
+        local_rows: list[dict[str, Any]] = []
+        local_failed: list[str] = []
+
+        frames, fps = read_video_frames(src_video_path)
         for k in range(1, eff_cfg.num_augmentations_per_video + 1):
             rng = _deterministic_rng(eff_cfg.random_seed, sample_id, k)
             aug_frames, aug_desc = apply_video_augmentations(
@@ -601,17 +613,17 @@ def augment_train_manifest(
 
             meta = probe_video_metadata(out_video_path)
             if not meta.get("is_valid", False):
-                failed_videos.append(str(out_video_path))
+                local_failed.append(str(out_video_path))
                 continue
 
-            augmented_rows.append(
+            local_rows.append(
                 {
                     "sample_id": aug_sample_id,
                     "video_path": _safe_rel_path(out_video_path, root_dir),
                     "label": label,
-                    "class_id": int(row["class_id"]),
-                    "signer_id": str(row["signer_id"]).strip(),
-                    "source": str(row["source"]).strip(),
+                    "class_id": int(row_dict["class_id"]),
+                    "signer_id": str(row_dict["signer_id"]).strip(),
+                    "source": str(row_dict["source"]).strip(),
                     "split": "train",
                     "is_augmented": True,
                     "parent_sample_id": sample_id,
@@ -624,6 +636,19 @@ def augment_train_manifest(
                     "is_valid": bool(meta["is_valid"]),
                 }
             )
+        return local_rows, local_failed
+
+    if eff_cfg.num_augmentations_per_video > 0 and work_items:
+        eff_workers = max(1, int(max_workers))
+        if eff_workers > 1 and len(work_items) > 4:
+            with ThreadPoolExecutor(max_workers=eff_workers) as executor:
+                results = list(executor.map(_augment_single_clip, work_items))
+        else:
+            results = [_augment_single_clip(item) for item in work_items]
+
+        for local_rows, local_failed in results:
+            augmented_rows.extend(local_rows)
+            failed_videos.extend(local_failed)
 
     aug_df = (
         pd.DataFrame(augmented_rows, columns=MANIFEST_COLUMNS)
@@ -735,6 +760,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             "unless --num-aug is explicitly provided."
         ),
     )
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=6,
+        help="Number of worker threads for parallel video augmentation (default: 6).",
+    )
     return parser.parse_args(argv)
 
 
@@ -760,6 +791,7 @@ def main(argv: list[str] | None = None) -> int:
         config_path=cfg_path,
         class_list_path=default_paths["class_list"],
         kaggle_only=args.kaggle_only,
+        max_workers=args.workers,
     )
     print(
         f"[augment] Saved {report['generated_augmented_samples']} augmented videos -> "

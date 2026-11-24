@@ -1,7 +1,7 @@
 """Comprehensive automated tests for Giai đoạn 2 — Tiền xử lý (Thiên).
 
 Covers Steps 2.1–2.4 using fast synthetic landmark arrays & fake MediaPipe result
-objects in `tmp_path` (no real webcam or MediaPipe detections required):
+objects inside `tmp_path` (no real webcam or MediaPipe detections required):
   - Step 2.1: `landmark_schema.py`, `extract_landmarks.py` (`results_to_arrays`,
     raw `.npz` save/load/validate)
   - Step 2.2: `normalize.py` (wrist-origin + translation/scale invariance,
@@ -9,9 +9,10 @@ objects in `tmp_path` (no real webcam or MediaPipe detections required):
     vs `normalize_sequence` consistency for Linh's real-time deployment)
   - Step 2.3: `sequence.py` (`interpolate_missing` <= max_gap only, idle trimming,
     resample/pad exact `target_len` & mask, velocity features, no NaN/Inf)
-  - Step 2.4: `build_features.py` & `scripts/run_thien_preprocess.py --demo`
-    (packed `{train,val,test}.npz` shapes, `y` in 0..29, `D == feature_dim(cfg)`,
-    zero signer overlap, consistent `feature_meta.json`)
+  - Step 2.4: `build_features.py` & `scripts/run_thien_preprocess.py` (production
+    runner, packed `{train,val,test}.npz` shapes, `y` in 0..29, `D == feature_dim(cfg)`,
+    zero signer overlap, consistent `feature_meta.json`, `--demo` strictly removed,
+    and no fake demo files in `data/landmarks/` or `data/features/`).
 """
 
 from __future__ import annotations
@@ -31,10 +32,10 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+import scripts.run_thien_preprocess as thien_runner
 from scripts.run_thien_preprocess import (
-    generate_demo_landmarks,
-    generate_synthetic_raw_landmarks,
-    run_demo_preprocess,
+    build_arg_parser as build_thien_arg_parser,
+    run_real_preprocess,
 )
 from src.preprocess import normalize as normalize_mod
 from src.preprocess import sequence as sequence_mod
@@ -65,6 +66,7 @@ from src.preprocess.landmark_schema import (
     R_WRIST,
     UPPER_BODY_POSE_IDX,
     WRIST,
+    detection_ratios,
     empty_frame_landmarks,
     empty_video_landmarks,
     load_raw_landmarks,
@@ -112,6 +114,171 @@ def _fake_landmark_list(coords: np.ndarray, *, with_visibility: bool = False) ->
         else:
             lms.append(SimpleNamespace(x=float(row[0]), y=float(row[1]), z=float(row[2])))
     return SimpleNamespace(landmark=lms)
+
+
+def _make_hand_skeleton(wrist_xyz: np.ndarray, hand_size: float, phase: float, side: int) -> np.ndarray:
+    pts = np.zeros((HAND_N, 3), dtype=np.float32)
+    pts[WRIST] = wrist_xyz
+    finger_angles = [-0.65, -0.28, 0.0, 0.28, 0.58]
+    for f_idx, ang in enumerate(finger_angles):
+        base_idx = 1 + f_idx * 4
+        dx = float(np.sin(ang * side))
+        dy = float(-np.cos(ang * side))
+        for j in range(4):
+            r = hand_size * (1.0 + 0.35 * j)
+            pts[base_idx + j, 0] = wrist_xyz[0] + r * dx
+            pts[base_idx + j, 1] = wrist_xyz[1] + r * dy
+            pts[base_idx + j, 2] = wrist_xyz[2] - 0.01 * j + 0.005 * np.sin(phase * 2.0 * np.pi)
+    dir9 = np.array([0.0, -1.0, -0.05], dtype=np.float32)
+    dir9 /= np.linalg.norm(dir9)
+    pts[MIDDLE_MCP] = wrist_xyz + hand_size * dir9
+    return pts
+
+
+def _make_synthetic_raw_landmarks(
+    *,
+    num_frames: int = 32,
+    class_id: int = 0,
+    signer_idx: int = 0,
+    sample_id: str = "test_sample",
+    label: str = "giúp đỡ",
+    signer_id: str = "vsl2_signer_001",
+    split: str = "train",
+    idle_frames: int = 2,
+    dropout_gap: int = 3,
+    seed: int = 42,
+) -> tuple[dict[str, np.ndarray], dict[str, Any]]:
+    rng = np.random.default_rng(seed + class_id * 101 + signer_idx * 37)
+    T = int(num_frames)
+    pose = np.zeros((T, POSE_N, POSE_DIM), dtype=np.float32)
+    face = np.zeros((T, FACE_N, FACE_DIM), dtype=np.float32)
+    left_hand = np.zeros((T, HAND_N, HAND_DIM), dtype=np.float32)
+    right_hand = np.zeros((T, HAND_N, HAND_DIM), dtype=np.float32)
+
+    pose_mask = np.ones(T, dtype=bool)
+    face_mask = np.ones(T, dtype=bool)
+    left_hand_mask = np.ones(T, dtype=bool)
+    right_hand_mask = np.ones(T, dtype=bool)
+
+    cx = 0.50 + 0.02 * ((signer_idx % 3) - 1)
+    cy = 0.44
+    shoulder_w = 0.22 + 0.02 * (signer_idx % 4)
+    hand_size = 0.08
+
+    for t in range(T):
+        ph = t / max(1, T - 1)
+        sc = np.array([cx, cy, 0.0], dtype=np.float32)
+        for j in range(25):
+            pose[t, j, :3] = sc + np.array([0.02 * ((j % 5) - 2), -0.18 + 0.015 * j, 0.0], dtype=np.float32)
+            pose[t, j, 3] = 0.95
+        pose[t, NOSE] = [sc[0], sc[1] - 0.18, -0.05, 0.99]
+        pose[t, L_SHOULDER] = [sc[0] + 0.5 * shoulder_w, sc[1], 0.0, 0.99]
+        pose[t, R_SHOULDER] = [sc[0] - 0.5 * shoulder_w, sc[1], 0.0, 0.99]
+        pose[t, L_HIP] = [sc[0] + 0.35 * shoulder_w, sc[1] + 0.35, 0.0, 0.92]
+        pose[t, R_HIP] = [sc[0] - 0.35 * shoulder_w, sc[1] + 0.35, 0.0, 0.92]
+
+        rw = np.array([sc[0] - 0.08 + 0.08 * np.cos(2.0 * np.pi * ph), sc[1] - 0.05 * np.sin(np.pi * ph), -0.06], dtype=np.float32)
+        lw = np.array([sc[0] + 0.08 - 0.06 * np.sin(2.0 * np.pi * ph), sc[1] - 0.04 * np.sin(np.pi * ph), -0.05], dtype=np.float32)
+        pose[t, R_WRIST] = [rw[0], rw[1], rw[2], 0.95]
+        pose[t, L_WRIST] = [lw[0], lw[1], lw[2], 0.95]
+        right_hand[t] = _make_hand_skeleton(rw, hand_size, ph, side=-1)
+        left_hand[t] = _make_hand_skeleton(lw, hand_size, ph, side=1)
+
+        nose_xyz = pose[t, NOSE, :3]
+        grid = np.linspace(-0.05, 0.05, FACE_N, dtype=np.float32)
+        face[t, :, 0] = nose_xyz[0] + grid
+        face[t, :, 1] = nose_xyz[1] + 0.02 * np.sin(grid * 15.0)
+        face[t, :, 2] = nose_xyz[2] + rng.normal(0.0, 0.001, size=FACE_N).astype(np.float32)
+        face[t, FACE_NOSE_TIP] = nose_xyz
+
+    idle = max(0, min(int(idle_frames), T // 5))
+    if idle > 0:
+        for sl in (slice(0, idle), slice(T - idle, T)):
+            left_hand[sl] = 0.0
+            right_hand[sl] = 0.0
+            left_hand_mask[sl] = False
+            right_hand_mask[sl] = False
+
+    gap = max(0, min(int(dropout_gap), T // 4))
+    if gap > 0 and T >= 14:
+        g0 = T // 2 - gap // 2
+        right_hand[g0 : g0 + gap] = 0.0
+        right_hand_mask[g0 : g0 + gap] = False
+
+    arrays = {
+        "pose": pose,
+        "face": face,
+        "left_hand": left_hand,
+        "right_hand": right_hand,
+        "pose_mask": pose_mask,
+        "face_mask": face_mask,
+        "left_hand_mask": left_hand_mask,
+        "right_hand_mask": right_hand_mask,
+    }
+    meta = {
+        "fps": 30.0,
+        "num_frames": T,
+        "width": 224,
+        "height": 224,
+        "sample_id": sample_id,
+        "label": label,
+        "class_id": int(class_id),
+        "signer_id": signer_id,
+        "split": split,
+    }
+    return arrays, meta
+
+
+def _write_synthetic_landmark_tree(ldir: Path, *, num_classes: int = 3) -> None:
+    """Write synthetic per-video `.npz` files & index CSVs for train/val/test inside `tmp_path`."""
+    split_signers = {
+        "train": [("vsl2_signer_001", 0), ("vsl2_signer_002", 1)],
+        "val": [("vsl2_signer_003", 2)],
+        "test": [("vsl2_signer_004", 3)],
+    }
+    labels = ["giúp đỡ", "muốn", "tiếp tục", "từ chối", "hứa"][:num_classes]
+    for split, signers in split_signers.items():
+        rows: list[dict[str, Any]] = []
+        for s_name, s_idx in signers:
+            for cid, lbl in enumerate(labels):
+                sid = f"{split}_{s_name}_c{cid:02d}"
+                arrays, meta = _make_synthetic_raw_landmarks(
+                    num_frames=28 + 4 * cid,
+                    class_id=cid,
+                    signer_idx=s_idx,
+                    sample_id=sid,
+                    label=lbl,
+                    signer_id=s_name,
+                    split=split,
+                )
+                rel = landmark_rel_path(split, cid, sid)
+                save_raw_landmarks(ldir / rel, arrays, meta)
+                ratios = detection_ratios(arrays)
+                rows.append(
+                    {
+                        "sample_id": sid,
+                        "landmark_path": rel,
+                        "video_path": f"tmp/{sid}.mp4",
+                        "label": lbl,
+                        "class_id": cid,
+                        "signer_id": s_name,
+                        "split": split,
+                        "is_augmented": False,
+                        "num_frames": meta["num_frames"],
+                        "fps": 30.0,
+                        "hand_detect_ratio": round(ratios["hand"], 4),
+                        "left_hand_detect_ratio": round(ratios["left_hand"], 4),
+                        "right_hand_detect_ratio": round(ratios["right_hand"], 4),
+                        "pose_detect_ratio": round(ratios["pose"], 4),
+                        "face_detect_ratio": round(ratios["face"], 4),
+                        "status": "ok",
+                        "error": "",
+                    }
+                )
+        df = pd.DataFrame(rows, columns=INDEX_COLUMNS)
+        df.to_csv(ldir / f"{split}_landmarks_index.csv", index=False, encoding="utf-8")
+        if split == "train":
+            df.to_csv(ldir / "train_augmented_landmarks_index.csv", index=False, encoding="utf-8")
 
 
 # ---------------------------------------------------------------------------
@@ -168,7 +335,6 @@ def test_landmark_schema_constants_and_preprocess_config() -> None:
 
 
 def test_results_to_arrays_with_fake_holistic_objects() -> None:
-    # None results -> all zeros + all False masks
     empty = results_to_arrays(None)
     assert empty["pose"].shape == (POSE_N, POSE_DIM) and empty["pose"].dtype == np.float32
     assert empty["face"].shape == (FACE_N, FACE_DIM) and empty["face"].dtype == np.float32
@@ -179,7 +345,6 @@ def test_results_to_arrays_with_fake_holistic_objects() -> None:
     )
     assert float(np.max(np.abs(empty["pose"]))) == 0.0
 
-    # Fake results with pose, refined 478-pt face (truncated to 468), left hand present, right hand None
     rng = np.random.default_rng(123)
     pose_arr = rng.uniform(0.1, 0.9, size=(POSE_N, POSE_DIM)).astype(np.float32)
     face_refined = rng.uniform(0.1, 0.9, size=(478, FACE_DIM)).astype(np.float32)
@@ -201,7 +366,6 @@ def test_results_to_arrays_with_fake_holistic_objects() -> None:
     np.testing.assert_allclose(out["left_hand"], lh_arr, atol=1e-6)
     assert float(np.max(np.abs(out["right_hand"]))) == 0.0
 
-    # NaN in fake landmarks degrades safely to zero + mask False
     bad_lh = lh_arr.copy()
     bad_lh[3, 1] = np.nan
     fake_bad = SimpleNamespace(
@@ -216,12 +380,12 @@ def test_results_to_arrays_with_fake_holistic_objects() -> None:
 
 
 def test_raw_landmarks_npz_save_load_and_validation(tmp_path: Path) -> None:
-    arrays, meta = generate_synthetic_raw_landmarks(
+    arrays, meta = _make_synthetic_raw_landmarks(
         num_frames=18,
         class_id=4,
         sample_id="vsl_test_001",
         label="hứa",
-        signer_id="kaggle_signer_north",
+        signer_id="vsl2_signer_001",
         split="train",
     )
     out_npz = tmp_path / "train" / "4" / "vsl_test_001.npz"
@@ -242,29 +406,25 @@ def test_raw_landmarks_npz_save_load_and_validation(tmp_path: Path) -> None:
     assert loaded["sample_id"] == "vsl_test_001"
     assert loaded["label"] == "hứa"
     assert loaded["class_id"] == 4
-    assert loaded["signer_id"] == "kaggle_signer_north"
+    assert loaded["signer_id"] == "vsl2_signer_001"
     assert loaded["split"] == "train"
 
-    # Negative validation: undetected frame must be zero-filled
     corrupt = {k: (v.copy() if isinstance(v, np.ndarray) else v) for k, v in loaded.items()}
     corrupt["left_hand_mask"][0] = False
     corrupt["left_hand"][0, 0, 0] = 0.5
     with pytest.raises(ValueError, match="zero-filled"):
         validate_raw_landmarks(corrupt)
 
-    # Negative validation: NaN/Inf rejected
     corrupt_nan = {k: (v.copy() if isinstance(v, np.ndarray) else v) for k, v in loaded.items()}
     corrupt_nan["pose"][0, 0, 0] = np.nan
     with pytest.raises(ValueError, match="NaN/Inf"):
         validate_raw_landmarks(corrupt_nan)
 
-    # Negative validation: wrong shape rejected
     corrupt_shape = dict(loaded)
     corrupt_shape["right_hand"] = np.zeros((18, 10, 3), dtype=np.float32)
     with pytest.raises(ValueError, match="shape"):
         validate_raw_landmarks(corrupt_shape)
 
-    # Empty frame contract helper check
     ef = empty_frame_landmarks()
     assert ef["pose"].shape == (POSE_N, POSE_DIM) and ef["pose_mask"] is False
     ev = empty_video_landmarks(5)
@@ -279,32 +439,27 @@ def test_raw_landmarks_npz_save_load_and_validation(tmp_path: Path) -> None:
 def test_hand_normalization_wrist_origin_invariance_and_missing() -> None:
     rng = np.random.default_rng(42)
     hand = rng.uniform(0.15, 0.85, size=(12, HAND_N, 3)).astype(np.float32)
-    # Ensure non-degenerate wrist -> middle_mcp distance
     hand[:, MIDDLE_MCP, :] = hand[:, WRIST, :] + np.array([0.04, -0.09, -0.02], dtype=np.float32)
 
     norm = normalize_hand(hand)
     assert norm.dtype == np.float32 and norm.shape == (12, HAND_N, 3)
     assert np.all(np.isfinite(norm))
 
-    # Wrist is exact origin (0, 0, 0), and ||middle_mcp|| == 1.0
     np.testing.assert_allclose(norm[:, WRIST, :], 0.0, atol=1e-6)
     mcp_norms = np.linalg.norm(norm[:, MIDDLE_MCP, :], axis=-1)
     np.testing.assert_allclose(mcp_norms, 1.0, atol=1e-5)
 
-    # Invariant to arbitrary translation + positive uniform scale
     shift = np.array([1.75, -0.82, 0.33], dtype=np.float32)
     transformed = hand * 3.4 + shift
     norm_transformed = normalize_hand(transformed)
     np.testing.assert_allclose(norm_transformed, norm, atol=1e-5)
 
-    # Missing hands -> exact zeros (via present=False mask AND degenerate zero scale)
     present = np.ones(12, dtype=bool)
     present[[2, 5, 9]] = False
     norm_masked = normalize_hand(hand, present=present)
     np.testing.assert_array_equal(norm_masked[~present], 0.0)
     assert np.any(norm_masked[present] != 0.0)
 
-    # Degenerate zero wrist->middle_mcp distance -> zeros (no NaN/Inf)
     degen = hand.copy()
     degen[:, MIDDLE_MCP, :] = degen[:, WRIST, :]
     norm_degen = normalize_hand(degen)
@@ -324,7 +479,6 @@ def test_pose_normalization_and_hand_global_position() -> None:
         pose[t, L_SHOULDER] = [center_true[0] + shoulder_w / 2, center_true[1], center_true[2], 0.99]
         pose[t, R_SHOULDER] = [center_true[0] - shoulder_w / 2, center_true[1], center_true[2], 0.99]
 
-    # Frame 3 loses shoulders (low visibility / zeros) -> should fall back to frame 2's shoulder frame
     pose[3, L_SHOULDER] = 0.0
     pose[3, R_SHOULDER] = 0.0
 
@@ -332,17 +486,14 @@ def test_pose_normalization_and_hand_global_position() -> None:
     assert norm_p.shape == (T, len(UPPER_BODY_POSE_IDX), 3)
     assert np.all(np.isfinite(norm_p))
 
-    # Shoulder midpoint is origin (0, 0, 0) and shoulder width is 1.0 on valid frames
     for t in (0, 1, 2, 4, 5):
         mid = 0.5 * (norm_p[t, L_SHOULDER] + norm_p[t, R_SHOULDER])
         dist = float(np.linalg.norm(norm_p[t, L_SHOULDER] - norm_p[t, R_SHOULDER]))
         np.testing.assert_allclose(mid, 0.0, atol=1e-6)
         assert dist == pytest.approx(1.0, abs=1e-5)
 
-    # Frame 3 non-shoulder upper-body joints still normalized cleanly using previous shoulder center/scale
     np.testing.assert_allclose(norm_p[3, NOSE], norm_p[2, NOSE], atol=1e-5)
 
-    # Hand global position relative to shoulder center / shoulder width
     hand = np.zeros((T, HAND_N, 3), dtype=np.float32)
     hand[:, WRIST, :] = center_true + np.array([shoulder_w * 0.5, -shoulder_w * 0.25, 0.0], dtype=np.float32)
     present = np.array([True, True, False, True, True, True], dtype=bool)
@@ -361,8 +512,7 @@ def test_normalize_frame_matches_normalize_sequence_for_realtime_deployment() ->
     """Critical deployment invariant for Linh (Giai đoạn 4):
     `normalize_frame` on each frame MUST match the corresponding row of `normalize_sequence`."""
     base_cfg = _load_preprocess_cfg()
-    arrays, meta = generate_synthetic_raw_landmarks(num_frames=14, idle_frames=2, dropout_gap=2, seed=99)
-    # Also simulate a mid-sequence shoulder dropout at frame 6 to verify stateful parity
+    arrays, meta = _make_synthetic_raw_landmarks(num_frames=14, idle_frames=2, dropout_gap=2, seed=99)
     arrays["pose"][6, L_SHOULDER] = 0.0
     arrays["pose"][6, R_SHOULDER] = 0.0
     raw = {**arrays, **meta}
@@ -400,14 +550,6 @@ def test_normalize_frame_matches_normalize_sequence_for_realtime_deployment() ->
 
 
 def test_interpolate_missing_respects_max_gap_and_boundaries() -> None:
-    # T = 16:
-    #  [0..1]   leading missing (2 frames) -> MUST remain 0 / False
-    #  [2]      value = 2.0
-    #  [3..5]   internal gap of 3 (<= max_gap=4) -> MUST be linearly interpolated (3.0, 4.0, 5.0)
-    #  [6]      value = 6.0
-    #  [7..11]  internal gap of 5 (> max_gap=4) -> MUST remain 0 / False
-    #  [12..13] values = 12.0, 13.0
-    #  [14..15] trailing missing (2 frames) -> MUST remain 0 / False
     T = 16
     arr = np.zeros((T, 2, 3), dtype=np.float32)
     mask = np.zeros(T, dtype=bool)
@@ -418,18 +560,15 @@ def test_interpolate_missing_respects_max_gap_and_boundaries() -> None:
     filled, new_mask = interpolate_missing(arr, mask, max_gap=4, return_mask=True)
     assert np.all(np.isfinite(filled))
 
-    # Leading & trailing gaps untouched
     assert not new_mask[0] and not new_mask[1]
     assert not new_mask[14] and not new_mask[15]
     np.testing.assert_array_equal(filled[[0, 1, 14, 15]], 0.0)
 
-    # Short gap (len 3 <= 4) linearly interpolated
     assert np.all(new_mask[2:7])
     np.testing.assert_allclose(filled[3], 3.0, atol=1e-5)
     np.testing.assert_allclose(filled[4], 4.0, atol=1e-5)
     np.testing.assert_allclose(filled[5], 5.0, atol=1e-5)
 
-    # Long gap (len 5 > 4) left zero & False
     assert not np.any(new_mask[7:12])
     np.testing.assert_array_equal(filled[7:12], 0.0)
 
@@ -438,7 +577,6 @@ def test_trim_resample_pad_and_to_fixed_length() -> None:
     cfg = _load_preprocess_cfg()
     D = feature_dim(cfg)
 
-    # trim_idle_frames drops leading/trailing idle frames
     feats = np.arange(10 * 4, dtype=np.float32).reshape(10, 4)
     hand_mask = np.array([False, False, True, True, False, True, False, False, False, False])
     trimmed, trimmed_mask = trim_idle_frames(feats, hand_mask)
@@ -447,11 +585,9 @@ def test_trim_resample_pad_and_to_fixed_length() -> None:
     np.testing.assert_array_equal(trimmed[-1], feats[5])
     assert trimmed_mask.shape == (4,)
 
-    # All-false hand_mask -> preserves non-empty sequence
     kept_feats, _ = trim_idle_frames(feats, np.zeros(10, dtype=bool))
     assert kept_feats.shape == (10, 4)
 
-    # resample_sequence: exact target_len across T=0, T=1, T<L, T>L
     assert resample_sequence(np.zeros((0, 5), dtype=np.float32), 48).shape == (48, 5)
     r1 = resample_sequence(np.full((1, 5), 3.5, dtype=np.float32), 48)
     assert r1.shape == (48, 5) and np.allclose(r1, 3.5)
@@ -463,7 +599,6 @@ def test_trim_resample_pad_and_to_fixed_length() -> None:
     assert r_up[-1, 0] == pytest.approx(10.0, abs=1e-5)
     assert resample_sequence(np.ones((75, 5), dtype=np.float32), 48).shape == (48, 5)
 
-    # pad_or_truncate: exact target_len + accurate mask
     short = np.ones((12, 4), dtype=np.float32)
     padded, pmask = pad_or_truncate(short, 48, pad_value=0.0)
     assert padded.shape == (48, 4) and pmask.shape == (48,) and pmask.dtype == np.bool_
@@ -475,7 +610,6 @@ def test_trim_resample_pad_and_to_fixed_length() -> None:
     assert trunc.shape == (48, 4) and np.all(tmask)
     np.testing.assert_array_equal(trunc[0], long_x[6])
 
-    # to_fixed_length with resample, pad, empty input, and velocity
     seq_in = np.ones((25, D), dtype=np.float32)
     X_res, m_res = to_fixed_length(seq_in, np.ones(25, dtype=bool), cfg)
     assert X_res.shape == (48, D) and m_res.shape == (48,) and np.all(m_res) and np.all(np.isfinite(X_res))
@@ -484,7 +618,6 @@ def test_trim_resample_pad_and_to_fixed_length() -> None:
     X_pad, m_pad = to_fixed_length(seq_in, np.ones(25, dtype=bool), cfg_pad)
     assert X_pad.shape == (48, D) and int(m_pad.sum()) == 25 and not np.any(m_pad[25:])
 
-    # Velocity doubles D and zeroes velocity on padded frames
     X_vel = add_velocity(X_pad, m_pad)
     assert X_vel.shape == (48, 2 * D)
     np.testing.assert_array_equal(X_vel[25:, D:], 0.0)
@@ -492,29 +625,22 @@ def test_trim_resample_pad_and_to_fixed_length() -> None:
 
 
 # ---------------------------------------------------------------------------
-# 4. Feature Builder, Signer Leakage Guard & End-to-End Demo (Step 2.4)
+# 4. Feature Builder, Signer Leakage Guard & Production Runner (Step 2.4)
 # ---------------------------------------------------------------------------
 
 
 def test_build_features_packing_zero_hand_skip_and_signer_leakage_guard(tmp_path: Path) -> None:
-    # Negative test: assert_no_signer_overlap catches any overlap across splits
     with pytest.raises(ValueError, match="signer overlap"):
-        assert_no_signer_overlap(
-            {"train": ["s1", "s2"], "val": ["s2"], "test": ["s3"]}
-        )
+        assert_no_signer_overlap({"train": ["s1", "s2"], "val": ["s2"], "test": ["s3"]})
     with pytest.raises(ValueError, match="signer overlap"):
-        assert_no_signer_overlap(
-            {"train": ["s1"], "val": ["s2"], "test": ["s1"]}
-        )
+        assert_no_signer_overlap({"train": ["s1"], "val": ["s2"], "test": ["s1"]})
     assert_no_signer_overlap({"train": ["s1", "s2"], "val": ["s3"], "test": ["s4"]})
 
-    # Generate synthetic landmarks in tmp_path, plus 1 zero-hand sample in train
     cfg = _load_preprocess_cfg()
     ldir = tmp_path / "landmarks"
     fdir = tmp_path / "features"
-    generate_demo_landmarks(ldir, root_dir=REPO_ROOT, num_classes=3, seed=42)
+    _write_synthetic_landmark_tree(ldir, num_classes=3)
 
-    # Append a zero-hand video to train_augmented_landmarks_index.csv to verify zero-hand tracking/skipping
     zero_arrays = empty_video_landmarks(20)
     zero_meta = {
         "fps": 30.0,
@@ -524,7 +650,7 @@ def test_build_features_packing_zero_hand_skip_and_signer_leakage_guard(tmp_path
         "sample_id": "train_zero_hands_sample",
         "label": "giúp đỡ",
         "class_id": 0,
-        "signer_id": "kaggle_signer_north",
+        "signer_id": "vsl2_signer_001",
         "split": "train",
     }
     zero_rel = landmark_rel_path("train", 0, "train_zero_hands_sample")
@@ -540,7 +666,7 @@ def test_build_features_packing_zero_hand_skip_and_signer_leakage_guard(tmp_path
                 "video_path": "fake.mp4",
                 "label": "giúp đỡ",
                 "class_id": 0,
-                "signer_id": "kaggle_signer_north",
+                "signer_id": "vsl2_signer_001",
                 "split": "train",
                 "is_augmented": False,
                 "num_frames": 20,
@@ -558,7 +684,6 @@ def test_build_features_packing_zero_hand_skip_and_signer_leakage_guard(tmp_path
     )
     pd.concat([df_train, extra_row], ignore_index=True).to_csv(train_idx_csv, index=False, encoding="utf-8")
 
-    # Build with skip_zero_hands=True
     meta = build_all_features(
         cfg,
         splits=("train", "val", "test"),
@@ -606,7 +731,6 @@ def test_build_features_packing_zero_hand_skip_and_signer_leakage_guard(tmp_path
             assert np.all(np.isfinite(X))
             assert "train_zero_hands_sample" not in set(sample_ids.tolist())
 
-            # Verify per-sample .npy matches packed X[0]
             first_npy = fdir / split / f"{sample_ids[0]}.npy"
             assert first_npy.exists()
             np.testing.assert_array_equal(np.load(first_npy), X[0])
@@ -617,30 +741,51 @@ def test_build_features_packing_zero_hand_skip_and_signer_leakage_guard(tmp_path
     assert split_signers["train"] & split_signers["test"] == set()
     assert split_signers["val"] & split_signers["test"] == set()
 
-    # process_sample sanity check
-    raw_arrs, raw_m = generate_synthetic_raw_landmarks(num_frames=32, idle_frames=3, dropout_gap=4)
+    raw_arrs, raw_m = _make_synthetic_raw_landmarks(num_frames=32, idle_frames=3, dropout_gap=4)
     X_s, mask_s, info_s = process_sample({**raw_arrs, **raw_m}, cfg)
     assert X_s.shape == (L, D) and mask_s.shape == (L,) and np.all(np.isfinite(X_s))
     assert info_s["num_frames_trimmed"] < info_s["num_frames_raw"]
 
 
-def test_end_to_end_thien_demo_preprocess(tmp_path: Path) -> None:
-    summary = run_demo_preprocess(
-        cfg=REPO_ROOT / "configs" / "preprocess_config.yaml",
-        landmarks_dir=tmp_path / "demo_landmarks",
-        features_dir=tmp_path / "demo_features",
-        root_dir=REPO_ROOT,
-        num_classes=5,
-        seed=42,
-    )
+def test_thien_no_demo_and_production_runner(tmp_path: Path) -> None:
+    """Verify `--demo` is strictly rejected, zero fake demo files exist in `data/landmarks`
+    or `data/features`, `docs/preprocess_guide.md` has zero `--demo` references, and
+    `run_real_preprocess(..., skip_extract=True)` works end-to-end in `tmp_path`."""
+    assert not hasattr(thien_runner, "run_demo_preprocess")
+    assert not hasattr(thien_runner, "generate_demo_landmarks")
 
-    assert summary["mode"] == "demo"
+    parser = build_thien_arg_parser()
+    option_strings = {opt for action in parser._actions for opt in action.option_strings}
+    assert "--demo" not in option_strings
+    assert "--demo-dir" not in option_strings
+    with pytest.raises(SystemExit) as exc_info:
+        parser.parse_args(["--demo"])
+    assert exc_info.value.code == 2
+
+    # No fake 5-class demo files left in workspace data/landmarks or data/features
+    assert not (REPO_ROOT / "data" / "landmarks").exists(), "Fake demo data/landmarks must not exist!"
+    assert not (REPO_ROOT / "data" / "features").exists(), "Fake demo data/features must not exist!"
+
+    guide_text = (REPO_ROOT / "docs" / "preprocess_guide.md").read_text(encoding="utf-8")
+    assert "--demo" not in guide_text.lower()
+
+    # Verify production runner end-to-end (skip_extract=True on isolated tmp_path landmarks)
+    ldir = tmp_path / "prod_landmarks"
+    fdir = tmp_path / "prod_features"
+    _write_synthetic_landmark_tree(ldir, num_classes=4)
+
+    summary = run_real_preprocess(
+        REPO_ROOT / "configs" / "preprocess_config.yaml",
+        splits=("train", "val", "test"),
+        landmarks_dir=ldir,
+        features_dir=fdir,
+        root_dir=REPO_ROOT,
+        skip_extract=True,
+    )
+    assert summary["mode"] == "production"
     assert summary["D"] == 207
     assert summary["L"] == 48
-    assert summary["per_split_counts"] == {"train": 40, "val": 5, "test": 5}
+    assert summary["per_split_counts"] == {"train": 8, "val": 4, "test": 4}
     assert summary["verification"]["zero_signer_leakage"] is True
-    assert summary["verification"]["hand_translation_scale_invariance_max_err"] < 1e-5
-    assert summary["verification"]["frame_vs_sequence_max_err"] < 1e-5
-
     for fname in ("train.npz", "val.npz", "test.npz", "feature_meta.json", "preprocess_summary.json"):
-        assert (tmp_path / "demo_features" / fname).exists()
+        assert (fdir / fname).exists()

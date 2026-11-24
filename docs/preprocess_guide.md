@@ -229,16 +229,16 @@ if len(buffer) >= 16:
 
 ---
 
-## 7. Lệnh Chạy CLI
+## 7. Lệnh Chạy CLI (Sản Xuất Thực Tế)
 
 ```powershell
-# 1. Chạy thử nghiệm trọn gói chế độ --demo (không cần MediaPipe hay video thật)
-python scripts/run_thien_preprocess.py --demo
-
-# 2. Chạy thật từng bước từ các manifest của Giai đoạn 1 (Quý)
+# 1. Chạy từng bước trên các manifest thực tế từ Giai đoạn 1 (Quý)
 python -m src.preprocess.extract_landmarks --config configs/preprocess_config.yaml
 python -m src.preprocess.build_features --config configs/preprocess_config.yaml --splits train val test --min-hand-ratio 0.0
 
-# 3. Hoặc chạy trọn gói Bước 2.1 -> 2.4 bằng một lệnh duy nhất
+# 2. Hoặc chạy trọn gói Bước 2.1 -> 2.4 bằng một lệnh duy nhất
 python scripts/run_thien_preprocess.py --config configs/preprocess_config.yaml
+
+# 3. Chạy lại Bước 2.2 -> 2.4 khi đã trích xuất xong raw landmarks (.npz)
+python scripts/run_thien_preprocess.py --config configs/preprocess_config.yaml --skip-extract
 ```
