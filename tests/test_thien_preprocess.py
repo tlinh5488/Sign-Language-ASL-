@@ -87,6 +87,7 @@ from src.preprocess.sequence import (
     add_velocity,
     interpolate_missing,
     pad_or_truncate,
+    process_realtime_window,
     resample_sequence,
     to_fixed_length,
     trim_idle_frames,
@@ -878,3 +879,55 @@ def test_real_production_stage2_artifacts_and_worksheet() -> None:
     assert "demo" not in readme_text.lower()
     assert "phieu_tim_hieu_phan_2_thien" in readme_text
     assert "4251, 48, 207" in readme_text or "(4251, 48, 207)" in readme_text
+
+
+def test_process_realtime_window_matches_pipeline() -> None:
+    """Kiểm tra helper cửa sổ trượt cho Phần 4 (nội suy tay mất ngắn, cắt nghỉ,
+    resample về L=48 và hỗ trợ add_velocity=True)."""
+    cfg = _load_preprocess_cfg()
+    raw, _ = _make_synthetic_raw_landmarks(num_frames=30, idle_frames=3, dropout_gap=2, seed=7)
+    state = make_state()
+    window = []
+    for t in range(30):
+        frame = {
+            "pose": raw["pose"][t],
+            "left_hand": raw["left_hand"][t],
+            "right_hand": raw["right_hand"][t],
+            "face": raw["face"][t],
+            "pose_mask": raw["pose_mask"][t],
+            "left_hand_mask": raw["left_hand_mask"][t],
+            "right_hand_mask": raw["right_hand_mask"][t],
+        }
+        window.append(normalize_frame(frame, cfg, state=state))
+    buf = np.stack(window, axis=0)
+    assert buf.shape == (30, 207)
+
+    X_rt, mask_rt = process_realtime_window(buf, cfg)
+    assert X_rt.shape == (48, 207) and X_rt.dtype == np.float32
+    assert mask_rt.shape == (48,) and mask_rt.dtype == np.bool_
+    assert bool(mask_rt.all())
+    assert np.all(np.isfinite(X_rt))
+
+    # Kiểm tra các frame giữa đã được nội suy không còn toàn 0 ở tay
+    offset = 0
+    lh_s, lh_e = 0, 0
+    for bname, bdim in normalize_mod.feature_blocks(cfg):
+        if bname == "left_hand":
+            lh_s, lh_e = offset, offset + int(bdim)
+            break
+        offset += int(bdim)
+    assert np.all(np.any(np.abs(X_rt[:, lh_s:lh_e]) > 0.0, axis=1))
+
+    # Kiểm tra với add_velocity=True -> 414 chiều
+    cfg_vel = json.loads(json.dumps(cfg))
+    cfg_vel["normalization"]["add_velocity"] = True
+    X_vel, mask_vel = process_realtime_window(buf, cfg_vel)
+    assert X_vel.shape == (48, 414) and X_vel.dtype == np.float32
+    assert np.all(np.isfinite(X_vel))
+    assert bool(mask_vel.all())
+
+    # Cửa sổ rỗng vẫn trả shape chuẩn toàn 0, mask False
+    X_empty, mask_empty = process_realtime_window(np.zeros((0, 207), dtype=np.float32), cfg)
+    assert X_empty.shape == (48, 207)
+    assert not bool(mask_empty.any())
+

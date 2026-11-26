@@ -298,6 +298,102 @@ def to_fixed_length(
     return X, out_mask
 
 
+def process_realtime_window(
+    features_window: np.ndarray,
+    cfg: Mapping[str, Any] | None = None,
+    *,
+    hand_mask: np.ndarray | None = None,
+    frame_mask: np.ndarray | None = None,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Chuẩn hóa trọn vẹn một cửa sổ trượt ``normalize_frame`` cho Phần 4 (Linh).
+
+    Khác với việc chỉ gọi ``to_fixed_length`` trực tiếp, hàm này tái lập đầy đủ
+    pipeline chuỗi của Phần 2 (nội suy lỗ mất tay ngắn hạn ``<= max_gap``, cắt
+    khung hình nghỉ đầu/cuối ``trim_idle``, rồi resample/pad về ``L`` khung hình
+    và nối vận tốc nếu bật) để tránh lệch phân phối giữa huấn luyện và webcam.
+
+    Args:
+        features_window: mảng ``(T, D_base)`` hoặc ``(T, 2*D_base)`` ghép từ các
+            lần gọi ``normalize_frame`` trong cửa sổ trượt.
+        cfg: config đầy đủ hoặc section ``sequence`` / ``normalization``.
+        hand_mask: ``(T,)`` bool tùy chọn đánh dấu frame có ít nhất 1 tay;
+            nếu ``None``, tự suy ra từ các cột bàn tay khác 0.
+        frame_mask: ``(T,)`` bool tùy chọn.
+
+    Returns:
+        ``(X (L, D_out) float32, out_mask (L,) bool)``.
+    """
+    from .normalize import base_feature_dim, feature_blocks, get_norm_cfg
+
+    scfg = get_seq_cfg(cfg)
+    ncfg = get_norm_cfg(cfg)
+    d_base = base_feature_dim(cfg)
+
+    feats = np.asarray(features_window, dtype=np.float32)
+    if feats.ndim != 2 or feats.shape[0] == 0:
+        return to_fixed_length(np.zeros((0, d_base), dtype=np.float32), None, cfg)
+
+    if bool(ncfg.get("add_velocity", False)) and feats.shape[1] == 2 * d_base:
+        feats = feats[:, :d_base].copy()
+    else:
+        feats = feats.copy()
+
+    block_slices: dict[str, tuple[int, int]] = {}
+    offset = 0
+    for bname, bdim in feature_blocks(cfg):
+        if bname == "velocity":
+            continue
+        block_slices[bname] = (offset, offset + int(bdim))
+        offset += int(bdim)
+
+    side_present: dict[str, np.ndarray] = {}
+    for side, global_key in (
+        ("left_hand", "left_wrist_global"),
+        ("right_hand", "right_wrist_global"),
+    ):
+        if side not in block_slices:
+            continue
+        s, e = block_slices[side]
+        present = np.any(np.abs(feats[:, s:e]) > 0.0, axis=1)
+        if bool(scfg.get("interpolate_missing_hands", True)):
+            max_gap = int(scfg.get("max_gap", 8))
+            filled, present = interpolate_missing(
+                feats[:, s:e], present, max_gap=max_gap, return_mask=True
+            )
+            feats[:, s:e] = filled
+            if global_key in block_slices:
+                gs, ge = block_slices[global_key]
+                g_present = np.any(np.abs(feats[:, gs:ge]) > 0.0, axis=1)
+                feats[:, gs:ge] = interpolate_missing(
+                    feats[:, gs:ge], g_present, max_gap=max_gap
+                )
+        side_present[side] = present
+
+    if hand_mask is not None:
+        active_hand_mask = np.asarray(hand_mask, dtype=bool)
+    elif side_present:
+        active_hand_mask = np.zeros(feats.shape[0], dtype=bool)
+        for m in side_present.values():
+            active_hand_mask |= m
+    else:
+        active_hand_mask = np.any(np.abs(feats) > 0.0, axis=1)
+
+    if frame_mask is not None:
+        fmask = np.asarray(frame_mask, dtype=bool)
+    else:
+        fmask = np.any(np.abs(feats) > 0.0, axis=1) | active_hand_mask
+
+    if bool(scfg.get("trim_idle", True)):
+        feats, fmask = trim_idle_frames(
+            feats,
+            active_hand_mask,
+            fmask,
+            margin=int(scfg.get("trim_margin", 0)),
+        )
+
+    return to_fixed_length(feats, fmask, cfg)
+
+
 __all__ = [
     "DEFAULT_SEQUENCE_CFG",
     "get_seq_cfg",
@@ -309,4 +405,5 @@ __all__ = [
     "pad_or_truncate",
     "add_velocity",
     "to_fixed_length",
+    "process_realtime_window",
 ]

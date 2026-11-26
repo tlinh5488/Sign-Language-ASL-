@@ -1,0 +1,42 @@
+# Ablation configuration for Stage 2 — 414-dim features with velocity (Δx)
+# Outputs to data/features_vel414/ without overwriting baseline data/features/ (207-dim).
+
+data_config: "configs/data_config.yaml"
+
+paths:
+  root_dir: "."
+  landmarks_dir: "data/landmarks"
+  features_dir: "data/features_vel414"
+
+manifests:
+  train: "train_augmented_manifest"
+  val: "val_manifest"
+  test: "test_manifest"
+
+normalization:
+  feature_set: "pose_upper+hands"
+  hand_origin: "wrist"
+  hand_scale: "wrist_to_middle_mcp"
+  pose_origin: "shoulder_center"
+  pose_scale: "shoulder_width"
+  face_origin: "nose"
+  face_scale: "shoulder_width"
+  include_hand_global_position: true
+  use_z: true
+  add_velocity: true
+  eps: 1.0e-6
+
+sequence:
+  target_len: 48
+  method: "resample"
+  fallback: "pad"
+  interpolate_missing_hands: true
+  max_gap: 8
+  trim_idle: true
+  pad_value: 0.0
+
+output:
+  format: "npz"
+  per_split_packed: true
+  index_suffix: "_landmarks_index.csv"
+

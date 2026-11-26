@@ -1,0 +1,135 @@
+{
+  "mode": "production",
+  "landmarks_dir": "data/landmarks",
+  "features_dir": "data/features_vel414",
+  "feature_meta_path": "data/features_vel414/feature_meta.json",
+  "D": 414,
+  "L": 48,
+  "total_samples": 4854,
+  "per_split_counts": {
+    "train": 4251,
+    "val": 294,
+    "test": 309
+  },
+  "signer_lists": {
+    "train": [
+      "qipedc_signer_01",
+      "qipedc_signer_02",
+      "qipedc_signer_03",
+      "qipedc_signer_04",
+      "qipedc_signer_05",
+      "vsl2_signer_001",
+      "vsl2_signer_002",
+      "vsl2_signer_003",
+      "vsl2_signer_004",
+      "vsl2_signer_008",
+      "vsl2_signer_009",
+      "vsl2_signer_010",
+      "vsl2_signer_011",
+      "vsl2_signer_012",
+      "vsl2_signer_014",
+      "vsl2_signer_015",
+      "vsl2_signer_018",
+      "vsl2_signer_019",
+      "vsl2_signer_021",
+      "vsl2_signer_022",
+      "vsl2_signer_024",
+      "vsl2_signer_026"
+    ],
+    "val": [
+      "vsl2_signer_006",
+      "vsl2_signer_013",
+      "vsl2_signer_020",
+      "vsl2_signer_025"
+    ],
+    "test": [
+      "vsl2_signer_007",
+      "vsl2_signer_016",
+      "vsl2_signer_023",
+      "vsl2_signer_027",
+      "vsl2_signer_028"
+    ]
+  },
+  "zero_hand_samples_count": 0,
+  "per_split_zero_hand_counts": {
+    "train": 0,
+    "val": 0,
+    "test": 0
+  },
+  "overall_detection_stats": {
+    "mean_hand_detect_ratio": 0.935,
+    "mean_left_hand_detect_ratio": 0.8671,
+    "mean_right_hand_detect_ratio": 0.7873,
+    "mean_pose_detect_ratio": 1.0,
+    "mean_face_detect_ratio": 0.8162,
+    "samples_with_hands_ratio": 1.0
+  },
+  "detection_stats": {
+    "train": {
+      "mean_hand_detect_ratio": 0.9367,
+      "mean_left_hand_detect_ratio": 0.8687,
+      "mean_right_hand_detect_ratio": 0.7899,
+      "mean_pose_detect_ratio": 1.0,
+      "mean_face_detect_ratio": 0.8334,
+      "samples_with_hands_ratio": 1.0,
+      "mean_num_frames_raw": 62.04,
+      "mean_num_frames_trimmed": 60.08
+    },
+    "val": {
+      "mean_hand_detect_ratio": 0.9455,
+      "mean_left_hand_detect_ratio": 0.8931,
+      "mean_right_hand_detect_ratio": 0.8068,
+      "mean_pose_detect_ratio": 1.0,
+      "mean_face_detect_ratio": 0.764,
+      "samples_with_hands_ratio": 1.0,
+      "mean_num_frames_raw": 64.12,
+      "mean_num_frames_trimmed": 62.97
+    },
+    "test": {
+      "mean_hand_detect_ratio": 0.9013,
+      "mean_left_hand_detect_ratio": 0.8206,
+      "mean_right_hand_detect_ratio": 0.7335,
+      "mean_pose_detect_ratio": 1.0,
+      "mean_face_detect_ratio": 0.6293,
+      "samples_with_hands_ratio": 1.0,
+      "mean_num_frames_raw": 64.14,
+      "mean_num_frames_trimmed": 62.9
+    }
+  },
+  "packed_files": {
+    "train": {
+      "path": "data/features_vel414/train.npz",
+      "shape": [
+        4251,
+        48,
+        414
+      ],
+      "count": 4251,
+      "size_bytes": 293311882,
+      "size_mib": 279.724
+    },
+    "val": {
+      "path": "data/features_vel414/val.npz",
+      "shape": [
+        294,
+        48,
+        414
+      ],
+      "count": 294,
+      "size_bytes": 20529240,
+      "size_mib": 19.578
+    },
+    "test": {
+      "path": "data/features_vel414/test.npz",
+      "shape": [
+        309,
+        48,
+        414
+      ],
+      "count": 309,
+      "size_bytes": 20770751,
+      "size_mib": 19.809
+    }
+  },
+  "zero_signer_leakage": true
+}
