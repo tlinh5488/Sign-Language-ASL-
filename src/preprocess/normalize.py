@@ -118,6 +118,7 @@ DEFAULT_NORMALIZATION_CFG: dict[str, Any] = {
     "include_hand_global_position": True,
     "include_hand_presence": False,
     "include_pose_visibility": False,
+    "include_geometric_features": False,
     "use_z": True,
     "add_velocity": False,
     "correct_aspect_ratio": False,
@@ -410,6 +411,8 @@ def feature_blocks(cfg: Mapping[str, Any] | None = None) -> list[tuple[str, int]
     if ncfg.get("include_hand_presence", False):
         blocks.append(("left_hand_present", 1))
         blocks.append(("right_hand_present", 1))
+    if ncfg.get("include_geometric_features", False):
+        blocks.append(("geometric", 24))
     if _use_face(ncfg):
         blocks.append(("face", len(FACE_SUBSET_IDX) * nd))
     return blocks
@@ -446,6 +449,19 @@ def feature_names(cfg: Mapping[str, Any] | None = None) -> list[str]:
             names += [f"{block}_{a}" for a in axes]
         elif block.endswith("_present"):
             names.append(block)
+        elif block == "geometric":
+            names += [
+                "geom_lh_thumb_open", "geom_lh_index_open", "geom_lh_middle_open",
+                "geom_lh_ring_open", "geom_lh_pinky_open",
+                "geom_rh_thumb_open", "geom_rh_index_open", "geom_rh_middle_open",
+                "geom_rh_ring_open", "geom_rh_pinky_open",
+                "geom_lh_pinch_index", "geom_lh_pinch_middle",
+                "geom_rh_pinch_index", "geom_rh_pinch_middle",
+                "geom_lh_mean_open", "geom_rh_mean_open",
+                "geom_inter_wrist_dist", "geom_lh_to_nose_dist", "geom_rh_to_nose_dist",
+                "geom_lh_to_shoulder_dist", "geom_rh_to_shoulder_dist",
+                "geom_lh_rel_y", "geom_rh_rel_y", "geom_wrist_dz",
+            ]
         elif block == "face":
             for k in FACE_SUBSET_IDX:
                 names += [f"face_{k:03d}_{a}" for a in axes]
@@ -467,6 +483,76 @@ def _get(d: Mapping[str, Any], key: str, shape: tuple[int, ...], lead: tuple[int
 def _get_mask(d: Mapping[str, Any], key: str, arr: np.ndarray, point_axes: int = 2) -> np.ndarray:
     m = d.get(key)
     return _present_from(arr[..., :3], None if m is None else np.asarray(m, bool), point_axes)
+
+
+def geometric_features(
+    pose: np.ndarray,
+    pose_mask: np.ndarray,
+    lh: np.ndarray,
+    lh_mask: np.ndarray,
+    rh: np.ndarray,
+    rh_mask: np.ndarray,
+    center: np.ndarray,
+    scale: np.ndarray,
+    *,
+    use_z: bool = True,
+    eps: float = EPS,
+) -> np.ndarray:
+    """Tính 24 đặc trưng hình học bất biến tịnh tiến/tỉ lệ (thuần NumPy).
+
+    Gồm: độ mở 5 đầu ngón (10), kẹp ngón cái–trỏ/giữa (4), độ mở TB mỗi tay (2),
+    khoảng cách giữa 2 cổ tay (1), cổ tay→mũi (2), cổ tay→tâm vai (2),
+    cao độ tương đối y của 2 cổ tay (2) và chênh lệch độ sâu z (1).
+    """
+    nd = 3 if use_z else 2
+    sb = np.maximum(np.asarray(scale, dtype=np.float32), eps)[..., None]
+    c = np.asarray(center, dtype=np.float32)[..., :nd]
+
+    def _hand_geom(h: np.ndarray, hm: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        hn = normalize_hand(h, hm, use_z=use_z, eps=eps)
+        tips = hn[..., [4, 8, 12, 16, 20], :]
+        open_d = np.linalg.norm(tips, axis=-1)  # (..., 5)
+        pinch_idx = np.linalg.norm(hn[..., 4, :] - hn[..., 8, :], axis=-1, keepdims=True)
+        pinch_mid = np.linalg.norm(hn[..., 4, :] - hn[..., 12, :], axis=-1, keepdims=True)
+        mean_o = np.mean(open_d, axis=-1, keepdims=True)
+        pinch = np.concatenate([pinch_idx, pinch_mid], axis=-1)
+        pres = np.asarray(hm, dtype=bool)[..., None]
+        return np.where(pres, open_d, 0.0), np.where(pres, pinch, 0.0), np.where(pres, mean_o, 0.0)
+
+    lh_open, lh_pinch, lh_mean = _hand_geom(lh, lh_mask)
+    rh_open, rh_pinch, rh_mean = _hand_geom(rh, rh_mask)
+
+    lw = hand_global_position(lh, lh_mask, center, scale, use_z=use_z, eps=eps)
+    rw = hand_global_position(rh, rh_mask, center, scale, use_z=use_z, eps=eps)
+    l_pres = np.asarray(lh_mask, dtype=bool)
+    r_pres = np.asarray(rh_mask, dtype=bool)
+    both_pres = (l_pres & r_pres)[..., None]
+
+    inter_wrist = np.where(both_pres, np.linalg.norm(lw - rw, axis=-1, keepdims=True), 0.0)
+
+    nose_norm = (np.asarray(pose[..., NOSE, :nd], dtype=np.float32) - c) / sb
+    p_pres = np.asarray(pose_mask, dtype=bool)
+    lh_nose = np.where((l_pres & p_pres)[..., None], np.linalg.norm(lw - nose_norm, axis=-1, keepdims=True), 0.0)
+    rh_nose = np.where((r_pres & p_pres)[..., None], np.linalg.norm(rw - nose_norm, axis=-1, keepdims=True), 0.0)
+
+    lh_sh = np.where(l_pres[..., None], np.linalg.norm(lw, axis=-1, keepdims=True), 0.0)
+    rh_sh = np.where(r_pres[..., None], np.linalg.norm(rw, axis=-1, keepdims=True), 0.0)
+
+    lh_y = np.where(l_pres[..., None], lw[..., 1:2], 0.0)
+    rh_y = np.where(r_pres[..., None], rw[..., 1:2], 0.0)
+    dz = np.where(both_pres & use_z, (lw[..., 2:3] - rw[..., 2:3]) if use_z else np.zeros_like(lh_y), 0.0)
+
+    return np.concatenate(
+        [
+            lh_open, rh_open,
+            lh_pinch, rh_pinch,
+            lh_mean, rh_mean,
+            inter_wrist, lh_nose, rh_nose,
+            lh_sh, rh_sh,
+            lh_y, rh_y, dz,
+        ],
+        axis=-1,
+    ).astype(np.float32)
 
 
 def _normalize_arrays(
@@ -537,6 +623,12 @@ def _normalize_arrays(
             parts.append(lh_m.astype(np.float32)[..., None])
         elif block == "right_hand_present":
             parts.append(rh_m.astype(np.float32)[..., None])
+        elif block == "geometric":
+            parts.append(
+                geometric_features(
+                    pose, pose_m, lh, lh_m, rh, rh_m, center, scale, use_z=use_z, eps=eps
+                )
+            )
         elif block == "face":
             face = to_isotropic(_get(raw, "face", (FACE_N, 3), lead), aspect)
             face_m = _get_mask(raw, "face_mask", face)

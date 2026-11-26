@@ -26,3 +26,4 @@ data/landmarks/*/**/*.npy
 data/features/*/*.npy
 data/features/*/**/*.npy
 data/demo/
+artifacts/

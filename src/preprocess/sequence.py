@@ -27,6 +27,7 @@ DEFAULT_SEQUENCE_CFG: dict[str, Any] = {
     "max_gap": 8,
     "trim_idle": True,
     "trim_margin": 0,
+    "smooth_window": 0,
     "pad_value": 0.0,
     "truncate": "center",  # khi method=pad và T > L: "center" | "start" | "resample"
 }
@@ -391,7 +392,48 @@ def process_realtime_window(
             margin=int(scfg.get("trim_margin", 0)),
         )
 
+    smooth_w = int(scfg.get("smooth_window", 0) or 0)
+    if smooth_w >= 3:
+        feats = smooth_sequence(feats, window=smooth_w, mask=fmask)
+
     return to_fixed_length(feats, fmask, cfg)
+
+
+def smooth_sequence(
+    x: np.ndarray,
+    window: int = 5,
+    mask: np.ndarray | None = None,
+) -> np.ndarray:
+    """Làm mượt chuỗi đặc trưng ``(T, D)`` theo thời gian bằng trọng số tam giác.
+
+    Giữ nguyên frame biên/frame mất phát hiện (``mask=False``) để giảm rung
+    (jitter) từ MediaPipe trên webcam mà không làm mờ biên chuyển động.
+    """
+    arr = np.asarray(x, dtype=np.float32)
+    T = arr.shape[0]
+    w = int(window)
+    if T < 3 or w < 3:
+        return arr.copy()
+    if w % 2 == 0:
+        w += 1
+    half = w // 2
+    weights = np.array([half + 1 - abs(k) for k in range(-half, half + 1)], dtype=np.float32)
+
+    valid = np.ones(T, dtype=bool) if mask is None else np.asarray(mask, dtype=bool)
+    out = arr.copy()
+    for t in range(T):
+        if not valid[t]:
+            continue
+        lo = max(0, t - half)
+        hi = min(T, t + half + 1)
+        sub_valid = valid[lo:hi]
+        if not np.any(sub_valid):
+            continue
+        sub_w = weights[(lo - (t - half)) : (w - ((t + half + 1) - hi))] * sub_valid.astype(np.float32)
+        denom = float(np.sum(sub_w))
+        if denom > 0.0:
+            out[t] = np.sum(arr[lo:hi] * sub_w[:, None], axis=0) / denom
+    return out
 
 
 __all__ = [
@@ -405,5 +447,6 @@ __all__ = [
     "pad_or_truncate",
     "add_velocity",
     "to_fixed_length",
+    "smooth_sequence",
     "process_realtime_window",
 ]
