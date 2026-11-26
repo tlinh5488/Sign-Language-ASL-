@@ -13,3 +13,11 @@ kaggle>=1.6.17,<2.0.0
 
 # Testing
 pytest>=8.0.0,<10.0.0
+
+# Stage 3 (Hiếu) — training, ONNX export & figures
+# CPU-only torch: pip install torch --index-url https://download.pytorch.org/whl/cpu
+torch>=2.2
+onnx>=1.16,<1.18
+onnxruntime>=1.17
+protobuf>=4.25.3,<5        # mediapipe 0.10.14 requires protobuf<5
+matplotlib>=3.8

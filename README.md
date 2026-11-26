@@ -199,6 +199,25 @@ from src.preprocess.normalize import normalize_frame
 
 ---
 
+## 7b. Giai đoạn 3 — Mô hình LSTM/BiLSTM & xuất ONNX (Hiếu)
+
+> Phiếu tìm hiểu: [docs/phieu_tim_hieu_phan_3_hieu.md](docs/phieu_tim_hieu_phan_3_hieu.md) · Bảng đủ 21 lần chạy: [docs/hieu_experiment_results.md](docs/hieu_experiment_results.md)
+
+| Mô hình (3 seed, TB ± std) | Tham số | val macro-F1 | test macro-F1 |
+| :--- | ---: | :---: | :---: |
+| Baseline LSTM 1 tầng | 176K | 0.897 ± 0.014 | 0.848 ± 0.005 |
+| BiLSTM 2 tầng, dropout 0.3 | 695K | 0.917 ± 0.001 | 0.865 ± 0.021 |
+| **BiLSTM 3 tầng, dropout 0.5 (bàn giao)** | 1.09M | **0.929 ± 0.010** | 0.854 ± 0.002 |
+
+Mô hình bàn giao cho Linh nằm ở `artifacts/final/` (`model.onnx` cùng `model_card.json`). Giao kèo: `features (B,48,207) float32` + `mask (B,48) bool` → `logits (B,30)`. Bản ONNX đã được kiểm tra khớp PyTorch trên 309 mẫu test (sai khác tối đa 3.3e-6, argmax trùng 100%). Khoảng cách val → test chủ yếu do 2 người trong tập test có video mà MediaPipe gần như không bắt được khuôn mặt (accuracy 54–78%, so với 94–97% ở 3 người còn lại). Chi tiết xem mục IV của phiếu.
+
+```powershell
+python scripts/run_hieu_experiments.py --config configs/train_experiments.yaml   # chạy lại toàn bộ thí nghiệm
+python -m src.train.train --arch bilstm --num-layers 3 --dropout 0.5 --output-dir artifacts/experiments/my_run
+```
+
+---
+
 ## 8. Kiểm thử tự động (Automated Tests)
 
 ```powershell

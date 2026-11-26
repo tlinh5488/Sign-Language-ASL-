@@ -1,7 +1,7 @@
 """Demo nhận diện VSL thời gian thực qua Webcam cho Giai đoạn 4 (Linh).
 
 Chạy sau khi đã huấn luyện & export ONNX ở Giai đoạn 3:
-    python scripts/run_webcam_demo.py --model artifacts/bilstm_207/model.onnx --meta data/features/feature_meta.json
+    python scripts/run_webcam_demo.py --model artifacts/final/model.onnx --meta data/features/feature_meta.json
 
 Phím tắt trên cửa sổ webcam:
     - c: Xóa câu đang ghép
@@ -71,7 +71,7 @@ def draw_utf8_text(
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description="Real-time VSL Webcam Demo (Stage 4)")
-    p.add_argument("--model", default="artifacts/bilstm_207/model.onnx")
+    p.add_argument("--model", default="artifacts/final/model.onnx")
     p.add_argument("--meta", default="data/features/feature_meta.json")
     p.add_argument("--camera", type=int, default=0)
     p.add_argument("--conf", type=float, default=0.65)

@@ -1,0 +1,42 @@
+# Giai đoạn 3 (Hiếu) — Kế hoạch thí nghiệm huấn luyện
+# Chạy: python scripts/run_hieu_experiments.py --config configs/train_experiments.yaml
+# Quy tắc: CHỌN mô hình chỉ theo val macro-F1. Test chỉ dùng để báo cáo, không dùng để chọn.
+
+features_dir: "data/features"          # (N, 48, 207) từ Phần 2 (Thiên)
+output_root: "artifacts/experiments"
+final_dir: "artifacts/final"           # Bàn giao cho Linh (Phần 4)
+
+# Siêu tham số mặc định cho mọi lần chạy (các stage ghi đè từng phần)
+defaults:
+  epochs: 30
+  patience: 7            # early stopping theo val macro-F1
+  batch_size: 64
+  lr: 0.001
+  hidden_dim: 128
+  num_layers: 2
+  dropout: 0.3
+  weight_decay: 0.0001
+  label_smoothing: 0.05
+  augment: true
+  seed: 42
+
+# Stage A — So sánh kiến trúc với cùng siêu tham số mặc định
+stage_a:
+  - {name: A1_lstm_l1,        arch: lstm,        num_layers: 1}
+  - {name: A2_lstm_l2,        arch: lstm,        num_layers: 2}
+  - {name: A3_bilstm_l1,      arch: bilstm,      num_layers: 1}
+  - {name: A4_bilstm_l2,      arch: bilstm,      num_layers: 2}
+  - {name: A5_bilstm_l3,      arch: bilstm,      num_layers: 3}
+  - {name: A6_bilstm_attn_l2, arch: bilstm_attn, num_layers: 2}
+
+# Stage B — Tinh chỉnh từng yếu tố (one-factor-at-a-time) trên BiLSTM tốt nhất của Stage A
+stage_b:
+  lr: [0.0005, 0.003]
+  batch_size: [32, 128]
+  dropout: [0.1, 0.5]
+  hidden_dim: [256]
+  augment: [false]
+
+# Stage C — Gộp giá trị tốt nhất mỗi yếu tố, rồi chạy lại cấu hình cuối với nhiều seed
+stage_c:
+  seeds: [42, 7, 2024]

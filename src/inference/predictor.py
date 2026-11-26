@@ -96,19 +96,11 @@ class VSLRealtimePredictor:
             )
         else:
             import torch
-            from src.train.model import VSLBiLSTMAttention
+            from src.train.model import build_model_from_checkpoint
 
-            ckpt = torch.load(self.model_path, map_location="cpu", weights_only=True)
-            model = VSLBiLSTMAttention(
-                input_dim=int(ckpt["input_dim"]),
-                num_classes=int(ckpt["num_classes"]),
-                proj_dim=int(ckpt.get("hidden_dim", 128)),
-                hidden_dim=int(ckpt.get("hidden_dim", 128)),
-                dropout=float(ckpt.get("dropout", 0.3)),
-            )
-            model.load_state_dict(ckpt["model_state_dict"])
-            model.eval()
-            self._torch_model = model
+            # Checkpoint có chứa class_names (list[str]) nên không dùng weights_only=True.
+            ckpt = torch.load(self.model_path, map_location="cpu", weights_only=False)
+            self._torch_model = build_model_from_checkpoint(ckpt)
 
     def _predict_logits(self, X: np.ndarray, mask: np.ndarray) -> np.ndarray:
         x_in = X[None, ...].astype(np.float32)

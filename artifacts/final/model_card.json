@@ -1,0 +1,137 @@
+{
+  "model_name": "VSL-30 sign classifier",
+  "source_run": "B_dropout_0.5",
+  "hparams": {
+    "arch": "bilstm",
+    "num_layers": 3,
+    "hidden_dim": 128,
+    "dropout": 0.5,
+    "lr": 0.001,
+    "batch_size": 64,
+    "weight_decay": 0.0001,
+    "label_smoothing": 0.05,
+    "augment": true,
+    "epochs": 30,
+    "patience": 7,
+    "seed": 42
+  },
+  "num_params": 1089822,
+  "onnx": {
+    "file": "model.onnx",
+    "opset": 17,
+    "inputs": {
+      "features": {
+        "dtype": "float32",
+        "shape": [
+          "batch",
+          48,
+          207
+        ]
+      },
+      "mask": {
+        "dtype": "bool",
+        "shape": [
+          "batch",
+          48
+        ],
+        "meaning": "True = frame hợp lệ"
+      }
+    },
+    "outputs": {
+      "logits": {
+        "dtype": "float32",
+        "shape": [
+          "batch",
+          30
+        ],
+        "note": "Chưa softmax; class_id = argmax"
+      }
+    },
+    "parity_vs_pytorch_on_test": {
+      "n_samples": 309,
+      "atol": 0.0001,
+      "batch1": {
+        "max_abs_diff": 3.337860107421875e-06,
+        "argmax_agreement": 1.0,
+        "passed": true
+      },
+      "batch64": {
+        "max_abs_diff": 3.337860107421875e-06,
+        "argmax_agreement": 1.0,
+        "passed": true
+      },
+      "passed": true
+    }
+  },
+  "preprocessing": {
+    "must_use": "src.preprocess.normalize.normalize_frame + src.preprocess.sequence.process_realtime_window",
+    "feature_meta": "data/features/feature_meta.json",
+    "feature_dim": 207,
+    "seq_len": 48
+  },
+  "class_names": [
+    "giúp đỡ",
+    "muốn",
+    "tiếp tục",
+    "từ chối",
+    "hứa",
+    "không nên",
+    "không cho",
+    "không quen",
+    "xem",
+    "dỗi",
+    "chị",
+    "ông nội",
+    "ông ngoại",
+    "thông minh",
+    "thơm",
+    "mới",
+    "yếu",
+    "phở",
+    "sữa",
+    "trứng",
+    "kẹo",
+    "gạo",
+    "quả dừa",
+    "con chó",
+    "con mèo",
+    "công viên",
+    "buổi sáng",
+    "buổi trưa",
+    "buổi tối",
+    "mùa hè"
+  ],
+  "metrics": {
+    "val": {
+      "accuracy": 0.9354,
+      "top3_accuracy": 0.9592,
+      "macro_f1": 0.9376,
+      "weighted_f1": 0.935
+    },
+    "test": {
+      "accuracy": 0.8511,
+      "top3_accuracy": 0.9353,
+      "macro_f1": 0.851,
+      "weighted_f1": 0.8493
+    },
+    "seed_stability": {
+      "seeds": [
+        42,
+        7,
+        2024
+      ],
+      "val_macro_f1": {
+        "mean": 0.9293,
+        "std": 0.0099
+      },
+      "test_macro_f1": {
+        "mean": 0.8542,
+        "std": 0.0023
+      },
+      "test_accuracy": {
+        "mean": 0.8533,
+        "std": 0.0016
+      }
+    }
+  }
+}

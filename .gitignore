@@ -26,4 +26,6 @@ data/landmarks/*/**/*.npy
 data/features/*/*.npy
 data/features/*/**/*.npy
 data/demo/
-artifacts/
+# Thí nghiệm Phần 3 không track; riêng mô hình bàn giao cho Linh (artifacts/final/) được track
+artifacts/*
+!artifacts/final/
