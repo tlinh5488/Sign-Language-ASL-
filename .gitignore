@@ -18,10 +18,11 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Stage 2 extracted tensor/landmark caches & legacy demo directory
-# (Real Stage 1 raw & train-augmented .mp4 videos + all manifests/splits/reports ARE tracked for Stage 2 handoff)
-data/landmarks/**/*.npz
-data/landmarks/**/*.npy
-data/features/**/*.npy
-data/features/**/*.npz
+# Stage 2 per-sample intermediate caches & legacy demo directory
+# (Real Stage 1 raw & train-augmented .mp4 videos, all manifests/splits/reports,
+#  landmark index CSVs, feature JSONs, and packed data/features/{train,val,test}.npz ARE tracked)
+data/landmarks/*/**/*.npz
+data/landmarks/*/**/*.npy
+data/features/*/*.npy
+data/features/*/**/*.npy
 data/demo/

@@ -145,16 +145,26 @@ Sau khi chạy Bước 2.4 (`src.preprocess.build_features`), thư mục `data/f
 ```text
 data/features/
 ├── train/
-│   └── <sample_id>.npy           # (L, D) = (48, 207) float32 cho từng mẫu train
+│   └── <sample_id>.npy           # 4.251 file (48, 207) float32 cho từng mẫu train
 ├── val/
-│   └── <sample_id>.npy           # (L, D) = (48, 207) float32 cho từng mẫu val
+│   └── <sample_id>.npy           # 294 file (48, 207) float32 cho từng mẫu val
 ├── test/
-│   └── <sample_id>.npy           # (L, D) = (48, 207) float32 cho từng mẫu test
-├── train.npz                     # Tập train đóng gói (đọc từ train_augmented index)
-├── val.npz                       # Tập val đóng gói
-├── test.npz                      # Tập test đóng gói
-└── feature_meta.json             # Thông số D, L, feature_names, class_list, signer_lists
+│   └── <sample_id>.npy           # 309 file (48, 207) float32 cho từng mẫu test
+├── train.npz                     # Tập train đóng gói (4251, 48, 207) — 140.44 MiB
+├── val.npz                       # Tập val đóng gói (294, 48, 207) — 9.82 MiB
+├── test.npz                      # Tập test đóng gói (309, 48, 207) — 9.94 MiB
+├── feature_meta.json             # Thông số D=207, L=48, feature_names, class_list, signer_lists
+└── preprocess_summary.json       # Báo cáo tổng kết sản xuất (mode="production", 4.854 mẫu)
 ```
+
+### Thống kê Thực tế Bộ Đặc trưng Sản xuất (4.854 video VSL thật — 30 lớp, 31 người ký hiệu)
+
+| Tập dữ liệu | File đóng gói | Số mẫu ($N$) | Shape `X` `(N, L, D)` | Số người ký hiệu | Số lớp | Tỷ lệ phát hiện tay (`hand_detect_ratio`) | Tỷ lệ phát hiện thân trên (`pose`) | Tỷ lệ phát hiện mặt (`face`) | Mẫu mất tay (`zero_hand`) | Dung lượng nén (`.npz`) |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Train** (`train_augmented`) | `data/features/train.npz` | **4.251** (1.417 gốc + 2.834 tăng cường 2×) | **`(4251, 48, 207)`** | **22** (5 QIPEDC + 17 VSL-v2) | **30/30** | **93.67%** (`0.9367`) | **100.00%** (`1.0000`) | **83.34%** (`0.8334`) | **0** | **140.44 MiB** |
+| **Validation** (`val`) | `data/features/val.npz` | **294** | **`(294, 48, 207)`** | **4** (VSL-v2 độc lập) | **30/30** | **94.55%** (`0.9455`) | **100.00%** (`1.0000`) | **76.40%** (`0.7640`) | **0** | **9.82 MiB** |
+| **Test** (`test`) | `data/features/test.npz` | **309** | **`(309, 48, 207)`** | **5** (VSL-v2 độc lập) | **30/30** | **90.13%** (`0.9013`) | **100.00%** (`1.0000`) | **62.93%** (`0.6293`) | **0** | **9.94 MiB** |
+| **Tổng / Trung bình** | **3 file `.npz`** | **4.854** | **`(4854, 48, 207)`** | **31 (0 trùng lặp)** | **30/30** | **93.50%** (`0.9350`) | **100.00%** (`1.0000`) | **81.62%** (`0.8162`) | **0** | **160.20 MiB** |
 
 ### Bảng các khóa trong `data/features/{train,val,test}.npz`
 

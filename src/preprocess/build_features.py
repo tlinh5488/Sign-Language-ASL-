@@ -10,12 +10,14 @@ hoặc ``train_augmented_landmarks_index.csv`` cho tập train), thực hiện c
 
 Đầu ra:
 * Từng mẫu: ``<features_dir>/<split>/<sample_id>.npy`` — ``(L, D) float32``
-* Đóng gói theo split: ``<features_dir>/{train,val,test}.npz`` với các khóa:
+* Đóng gói nén theo split (``np.savez_compressed``): ``<features_dir>/{train,val,test}.npz`` với các khóa:
   ``X (N, L, D) float32``, ``mask (N, L) bool``, ``y (N,) int64``,
   ``sample_ids (N,) str``, ``signer_ids (N,) str``, ``labels (N,) str``,
   ``is_augmented (N,) bool`` (đọc trực tiếp bằng ``np.load(..., allow_pickle=False)``).
-* Metadata: ``<features_dir>/feature_meta.json`` (D, L, feature_names, config snapshot,
-  class_list, per_split_counts, signer_lists, samples_skipped_zero_hands...).
+* Metadata & tổng kết sản xuất: ``<features_dir>/feature_meta.json`` và
+  ``<features_dir>/preprocess_summary.json`` (``mode: "production"``, D, L, feature_names,
+  config snapshot, class_list, per_split_counts, signer_lists, zero_hand_samples_count,
+  detection_stats, packed_files...).
 * Kiểm định bắt buộc: **không trùng ``signer_id`` giữa các tập train / val / test**.
 
 CLI::
@@ -36,7 +38,7 @@ from typing import Any, Iterable, Mapping
 import numpy as np
 import pandas as pd
 
-from src.preprocess.landmark_schema import load_raw_landmarks
+from src.preprocess.landmark_schema import detection_ratios, load_raw_landmarks
 from src.preprocess.normalize import (
     feature_blocks,
     feature_dim,
@@ -70,6 +72,14 @@ def _load_yaml(path: str | Path) -> dict[str, Any]:
 def _resolve(path: str | Path, root: Path) -> Path:
     p = Path(str(path))
     return p if p.is_absolute() else root / p
+
+
+def _rel_posix(path: str | Path, root: Path) -> str:
+    p = Path(path).resolve()
+    try:
+        return p.relative_to(root.resolve()).as_posix()
+    except ValueError:
+        return p.as_posix()
 
 
 def _bool(v: Any) -> bool:
@@ -174,19 +184,13 @@ def process_sample(
     scfg = get_seq_cfg(cfg)
     ncfg = get_norm_cfg(cfg)
 
-    lh_m0 = np.asarray(raw.get("left_hand_mask", []), dtype=bool)
-    rh_m0 = np.asarray(raw.get("right_hand_mask", []), dtype=bool)
-    if lh_m0.size and rh_m0.size:
-        hand_m0 = lh_m0 | rh_m0
-        raw_hand_ratio = float(np.mean(hand_m0))
-    else:
-        raw_hand_ratio = 0.0
+    ratios = detection_ratios(raw)
+    raw_hand_ratio = float(ratios["hand"])
 
     work = dict(raw)
     if bool(scfg.get("interpolate_missing_hands", True)):
         work = interpolate_raw_hands(work, max_gap=int(scfg.get("max_gap", 8)))
 
-    # Chuẩn hóa tọa độ cơ sở (chưa gắn velocity để tránh tính đạo hàm trước khi cắt/resample)
     cfg_no_vel = dict(cfg or {})
     norm_no_vel = dict(ncfg)
     norm_no_vel["add_velocity"] = False
@@ -211,6 +215,10 @@ def process_sample(
     X, out_mask = to_fixed_length(feats_base, frame_mask, cfg)
     info = {
         "raw_hand_ratio": raw_hand_ratio,
+        "raw_left_hand_ratio": float(ratios["left_hand"]),
+        "raw_right_hand_ratio": float(ratios["right_hand"]),
+        "raw_pose_ratio": float(ratios["pose"]),
+        "raw_face_ratio": float(ratios["face"]),
         "num_frames_raw": num_frames_raw,
         "num_frames_trimmed": num_frames_trimmed,
     }
@@ -257,7 +265,7 @@ def build_split_features(
 
     Ghi:
     * ``<features_dir>/<split>/<sample_id>.npy`` (nếu ``save_per_sample=True``)
-    * ``<features_dir>/<split>.npz``
+    * ``<features_dir>/<split>.npz`` (nén bằng ``np.savez_compressed``)
 
     Returns:
         Dict kết quả của split (arrays + thống kê).
@@ -295,6 +303,14 @@ def build_split_features(
     skipped_zero_hands: list[str] = []
     zero_hand_samples: list[str] = []
     skipped_errors: list[str] = []
+
+    hand_ratios: list[float] = []
+    lh_ratios: list[float] = []
+    rh_ratios: list[float] = []
+    pose_ratios: list[float] = []
+    face_ratios: list[float] = []
+    raw_lengths: list[int] = []
+    trimmed_lengths: list[int] = []
 
     sample_out_dir = fdir / split
     if save_per_sample:
@@ -338,6 +354,14 @@ def build_split_features(
         labels.append(str(rec.get("label", raw.get("label", ""))).strip())
         is_aug_list.append(_bool(rec.get("is_augmented", False)))
 
+        hand_ratios.append(info["raw_hand_ratio"])
+        lh_ratios.append(info["raw_left_hand_ratio"])
+        rh_ratios.append(info["raw_right_hand_ratio"])
+        pose_ratios.append(info["raw_pose_ratio"])
+        face_ratios.append(info["raw_face_ratio"])
+        raw_lengths.append(info["num_frames_raw"])
+        trimmed_lengths.append(info["num_frames_trimmed"])
+
     N = len(X_list)
     if N > 0:
         X_arr = np.stack(X_list, axis=0).astype(np.float32)
@@ -370,20 +394,42 @@ def build_split_features(
         is_augmented=aug_arr,
     )
     tmp_path.replace(packed_path)
+    packed_bytes = int(packed_path.stat().st_size) if packed_path.exists() else 0
+    packed_mib = round(packed_bytes / (1024.0 * 1024.0), 3)
 
     unique_signers = sorted({s for s in signer_ids if s})
     unique_classes = sorted({int(c) for c in y_list})
+    detection_stats = {
+        "mean_hand_detect_ratio": round(float(np.mean(hand_ratios)), 4) if hand_ratios else 0.0,
+        "mean_left_hand_detect_ratio": round(float(np.mean(lh_ratios)), 4) if lh_ratios else 0.0,
+        "mean_right_hand_detect_ratio": round(float(np.mean(rh_ratios)), 4) if rh_ratios else 0.0,
+        "mean_pose_detect_ratio": round(float(np.mean(pose_ratios)), 4) if pose_ratios else 0.0,
+        "mean_face_detect_ratio": round(float(np.mean(face_ratios)), 4) if face_ratios else 0.0,
+        "samples_with_hands_ratio": round(float(np.mean([r > 0 for r in hand_ratios])), 4) if hand_ratios else 0.0,
+        "mean_num_frames_raw": round(float(np.mean(raw_lengths)), 2) if raw_lengths else 0.0,
+        "mean_num_frames_trimmed": round(float(np.mean(trimmed_lengths)), 2) if trimmed_lengths else 0.0,
+    }
     return {
         "split": split,
-        "packed_path": str(packed_path),
-        "index_csv": str(idx_path),
+        "packed_path": _rel_posix(packed_path, root),
+        "packed_size_bytes": packed_bytes,
+        "packed_size_mib": packed_mib,
+        "index_csv": _rel_posix(idx_path, root),
         "count": N,
+        "num_samples": N,
+        "num_original": int(sum(1 for a in is_aug_list if not a)),
+        "num_augmented": int(sum(1 for a in is_aug_list if a)),
         "shape": list(X_arr.shape),
         "signers": unique_signers,
+        "num_signers": len(unique_signers),
         "class_ids": unique_classes,
+        "num_classes": len(unique_classes),
+        "zero_hand_samples_count": len(zero_hand_samples),
+        "skipped_zero_hands_count": len(skipped_zero_hands),
         "skipped_zero_hands": skipped_zero_hands,
         "zero_hand_samples": zero_hand_samples,
         "skipped_errors": skipped_errors,
+        "detection_stats": detection_stats,
     }
 
 
@@ -398,7 +444,7 @@ def build_all_features(
     skip_zero_hands: bool = False,
     save_per_sample: bool = True,
 ) -> dict[str, Any]:
-    """Xây dựng đặc trưng cho tất cả các split, kiểm tra rò rỉ signer và ghi ``feature_meta.json``."""
+    """Xây dựng đặc trưng cho tất cả các split, kiểm tra rò rỉ signer và ghi ``feature_meta.json`` + ``preprocess_summary.json``."""
     if isinstance(cfg, (str, Path)):
         cfg_dict = _load_yaml(cfg)
     else:
@@ -446,17 +492,47 @@ def build_all_features(
     all_zero_hand = [
         sid for r in split_reports.values() for sid in r.get("zero_hand_samples", [])
     ]
+    total_samples = int(sum(r["count"] for r in split_reports.values()))
+
+    def _weighted_stat(key: str) -> float:
+        if total_samples <= 0:
+            return 0.0
+        val = sum(
+            r["count"] * float(r.get("detection_stats", {}).get(key, 0.0))
+            for r in split_reports.values()
+        )
+        return round(val / total_samples, 4)
+
+    overall_detection = {
+        "mean_hand_detect_ratio": _weighted_stat("mean_hand_detect_ratio"),
+        "mean_left_hand_detect_ratio": _weighted_stat("mean_left_hand_detect_ratio"),
+        "mean_right_hand_detect_ratio": _weighted_stat("mean_right_hand_detect_ratio"),
+        "mean_pose_detect_ratio": _weighted_stat("mean_pose_detect_ratio"),
+        "mean_face_detect_ratio": _weighted_stat("mean_face_detect_ratio"),
+        "samples_with_hands_ratio": _weighted_stat("samples_with_hands_ratio"),
+    }
+    packed_files = {
+        s: {
+            "path": r["packed_path"],
+            "shape": r["shape"],
+            "count": r["count"],
+            "size_bytes": r["packed_size_bytes"],
+            "size_mib": r["packed_size_mib"],
+        }
+        for s, r in split_reports.items()
+    }
 
     cfg_snapshot = {
         "normalization": get_norm_cfg(cfg_dict),
         "sequence": get_seq_cfg(cfg_dict),
         "paths": {
-            "landmarks_dir": str(ldir),
-            "features_dir": str(fdir),
+            "landmarks_dir": _rel_posix(ldir, root),
+            "features_dir": _rel_posix(fdir, root),
         },
     }
     meta = {
         "schema_version": "2.0",
+        "mode": "production",
         "D": D,
         "feature_dim": D,
         "L": L,
@@ -468,19 +544,49 @@ def build_all_features(
         "num_classes": len(classes) if classes else 30,
         "class_list": classes,
         "classes": classes,
+        "total_samples": total_samples,
         "per_split_counts": {s: r["count"] for s, r in split_reports.items()},
         "signer_lists": split_signers,
         "signer_overlap_check_passed": True,
         "min_hand_ratio": float(min_hand_ratio),
+        "skip_zero_hands": bool(skip_zero_hands),
+        "zero_hand_samples_count": len(all_zero_hand),
+        "per_split_zero_hand_counts": {
+            s: r["zero_hand_samples_count"] for s, r in split_reports.items()
+        },
         "samples_skipped_zero_hands": all_skipped_zero,
         "skipped_zero_hand_samples": all_skipped_zero,
         "zero_hand_detection_samples": all_zero_hand,
+        "overall_detection_stats": overall_detection,
+        "detection_stats": {s: r["detection_stats"] for s, r in split_reports.items()},
+        "packed_files": packed_files,
         "splits": split_reports,
     }
     fdir.mkdir(parents=True, exist_ok=True)
     meta_path = fdir / "feature_meta.json"
     with open(meta_path, "w", encoding="utf-8") as f:
         json.dump(meta, f, ensure_ascii=False, indent=2)
+
+    summary = {
+        "mode": "production",
+        "landmarks_dir": _rel_posix(ldir, root),
+        "features_dir": _rel_posix(fdir, root),
+        "feature_meta_path": _rel_posix(meta_path, root),
+        "D": D,
+        "L": L,
+        "total_samples": total_samples,
+        "per_split_counts": meta["per_split_counts"],
+        "signer_lists": split_signers,
+        "zero_hand_samples_count": len(all_zero_hand),
+        "per_split_zero_hand_counts": meta["per_split_zero_hand_counts"],
+        "overall_detection_stats": overall_detection,
+        "detection_stats": meta["detection_stats"],
+        "packed_files": packed_files,
+        "zero_signer_leakage": True,
+    }
+    summary_path = fdir / "preprocess_summary.json"
+    with open(summary_path, "w", encoding="utf-8") as f:
+        json.dump(summary, f, ensure_ascii=False, indent=2)
 
     return meta
 
@@ -518,10 +624,10 @@ def main(argv: list[str] | None = None) -> int:
         save_per_sample=not args.no_per_sample,
     )
     print(
-        f"[build_features] D={meta['D']}, L={meta['L']}, "
+        f"[build_features] mode={meta['mode']}, D={meta['D']}, L={meta['L']}, "
         f"counts={meta['per_split_counts']}, "
-        f"signers={meta['signer_lists']}, "
-        f"skipped_zero_hands={len(meta['samples_skipped_zero_hands'])}"
+        f"zero_hand_samples={meta['zero_hand_samples_count']}, "
+        f"overall_hand_detect_ratio={meta['overall_detection_stats']['mean_hand_detect_ratio']:.4f}"
     )
     return 0
 

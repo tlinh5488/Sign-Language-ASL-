@@ -113,25 +113,29 @@ Nhan dien ki hieu/
 │   ├── qipedc_signer_map.json      # Bảng ánh xạ 90 clip QIPEDC -> 5 diễn viên xác minh trực quan
 │   └── preprocess_config.yaml      # Cấu hình Giai đoạn 2 (Thiên — MediaPipe Holistic)
 ├── docs/
-│   ├── phieu_tim_hieu_phan_1_quy.md # Phiếu tìm hiểu Phần 1 (5 câu hỏi + Ghi chú của Quy)
+│   ├── phieu_tim_hieu_phan_1_quy.md  # Phiếu tìm hiểu Phần 1 (5 câu hỏi + Ghi chú của Quy)
 │   ├── Phieu_Tim_Hieu_Phan_1_Quy.docx # Bản Word chuẩn nộp phiếu tìm hiểu Phần 1 (Quy)
-│   ├── collection_guide.md         # SOP quay webcam đa người & chế độ Dual Kaggle-only
-│   └── preprocess_guide.md         # Tài liệu Giai đoạn 2 (Thiên)
+│   ├── phieu_tim_hieu_phan_2_thien.md # Phiếu tìm hiểu Phần 2 (5 câu hỏi + Ghi chú của Thiên)
+│   ├── Phieu_Tim_Hieu_Phan_2_Thien.docx # Bản Word chuẩn nộp phiếu tìm hiểu Phần 2 (Thiên)
+│   ├── collection_guide.md           # SOP quay webcam đa người & chế độ Dual Kaggle-only
+│   └── preprocess_guide.md           # Tài liệu kỹ thuật Giai đoạn 2 (Thiên — MediaPipe Holistic)
 ├── scripts/
-│   ├── run_quy_pipeline.py         # CLI chạy trọn gói Phần 1 trên dữ liệu sản xuất thật
-│   └── run_thien_preprocess.py     # CLI chạy Phần 2 (Thiên) trên dữ liệu sản xuất thật
+│   ├── run_quy_pipeline.py           # CLI chạy trọn gói Phần 1 trên dữ liệu sản xuất thật
+│   └── run_thien_preprocess.py       # CLI chạy Phần 2 (Thiên) trên dữ liệu sản xuất thật
 ├── src/
-│   ├── data/                       # Phần 1 (Quý): schema, download_kaggle, scope, collect_videos, build_manifest, split_dataset, augment
-│   └── preprocess/                 # Phần 2 (Thiên): landmark_schema, extract_landmarks, normalize, sequence, build_features
+│   ├── data/                         # Phần 1 (Quý): schema, download_kaggle, scope, collect_videos, build_manifest, split_dataset, augment
+│   └── preprocess/                   # Phần 2 (Thiên): landmark_schema, extract_landmarks, normalize, sequence, build_features
 ├── tests/
-│   ├── test_quy_pipeline.py        # Bộ kiểm thử tự động pytest Phần 1
-│   └── test_thien_preprocess.py    # Bộ kiểm thử tự động pytest Phần 2
+│   ├── test_quy_pipeline.py          # Bộ kiểm thử tự động pytest Phần 1
+│   └── test_thien_preprocess.py      # Bộ kiểm thử tự động pytest Phần 2
 ├── data/
-│   ├── raw/                        # 2.020 video thật (269.92 MiB .mp4; bị .gitignore khỏi Git)
-│   ├── manifests/                  # Manifests & báo cáo (scoped_manifest.csv, quality/scope/signer_verification reports)
-│   ├── splits/                     # train.csv (1.417), val.csv (294), test.csv (309), train_augmented.csv (4.251), split/augment reports
-│   ├── augmented/train/            # 2.834 video tăng cường tập train (bị .gitignore khỏi Git)
-│   └── pipeline_summary.json       # Tổng hợp kết quả sản xuất (mode: "production_kaggle_only")
+│   ├── raw/                          # 2.020 video thật (269.92 MiB .mp4)
+│   ├── manifests/                    # Manifests & báo cáo (scoped_manifest.csv, quality/scope/signer_verification reports)
+│   ├── splits/                       # train.csv (1.417), val.csv (294), test.csv (309), train_augmented.csv (4.251), split/augment reports
+│   ├── augmented/train/              # 2.834 video tăng cường tập train
+│   ├── landmarks/                    # Landmark MediaPipe Holistic (.npz per-video + *_landmarks_index.csv cho 4.854 video)
+│   ├── features/                     # train.npz (4251,48,207), val.npz (294,48,207), test.npz (309,48,207), feature_meta.json, preprocess_summary.json
+│   └── pipeline_summary.json         # Tổng hợp kết quả sản xuất Phần 1 (mode: "production_kaggle_only")
 ├── requirements.txt
 └── README.md
 ```
@@ -159,7 +163,43 @@ Mọi file CSV đều lưu UTF-8 with BOM (`utf-8-sig`) gồm đúng 16 cột:
 
 ---
 
-## 7. Kiểm thử tự động (Automated Tests)
+## 7. Giai đoạn 2 — Tiền xử lý MediaPipe Holistic & Đặc trưng (Thiên)
+
+Giai đoạn 2 đã chạy trích xuất **MediaPipe Holistic thật** và chuẩn hóa chuỗi đặc trưng trên toàn bộ **4.854 / 4.854 video sản xuất** (`0` lỗi, `0` video mất tay, `mode: "production"` trong `data/features/preprocess_summary.json`), sẵn sàng bàn giao cho **Hiếu (Phần 3 — LSTM/BiLSTM)** và **Linh (Phần 4 — Triển khai webcam/ONNX)**.
+
+> Tài liệu phiếu tìm hiểu đầy đủ 5 câu hỏi nghiên cứu và *Ghi chú của thành viên (Phần 2 — Thiên)* xem tại: [docs/phieu_tim_hieu_phan_2_thien.md](docs/phieu_tim_hieu_phan_2_thien.md) (bản Word: [docs/Phieu_Tim_Hieu_Phan_2_Thien.docx](docs/Phieu_Tim_Hieu_Phan_2_Thien.docx)) và hướng dẫn kỹ thuật tại [docs/preprocess_guide.md](docs/preprocess_guide.md).
+
+### 7.1. Kết quả thực tế trích xuất landmark & đóng gói đặc trưng (`data/features/`)
+
+| Tập dữ liệu | Tệp đóng gói (`.npz`) | Shape `X` (`float32`) | Shape `mask` (`bool`) | Shape `y` (`int64`) | Số người / Lớp | `zero_hand` | Tỷ lệ nhận diện tay (`hand`) | Tỷ lệ `pose` | Tỷ lệ `face` | Dung lượng nén |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **`train`** | `data/features/train.npz` | **`(4251, 48, 207)`** | `(4251, 48)` | `(4251,)` (`0..29`) | 22 người · 30/30 lớp | **0** | **93.67%** (`0.9367`) | **100.0%** | **83.34%** | **140.44 MiB** (Git LFS) |
+| **`val`** | `data/features/val.npz` | **`(294, 48, 207)`** | `(294, 48)` | `(294,)` (`0..29`) | 4 người · 30/30 lớp | **0** | **94.55%** (`0.9455`) | **100.0%** | **76.40%** | **9.82 MiB** |
+| **`test`** | `data/features/test.npz` | **`(309, 48, 207)`** | `(309, 48)` | `(309,)` (`0..29`) | 5 người · 30/30 lớp | **0** | **90.13%** (`0.9013`) | **100.0%** | **62.93%** | **9.94 MiB** |
+| **Tổng / Trung bình** | **3 tệp `.npz` nén** | **`(4854, 48, 207)`** | `(4854, 48)` | `(4854,)` | **31 người (0 rò rỉ) · 30/30 lớp** | **0** | **93.50%** (`0.9350`) | **100.0%** | **81.62%** | **160.20 MiB** |
+
+### 7.2. Chạy lại Giai đoạn 2 & Cách nạp đặc trưng cho Phần 3 (Hiếu) / Phần 4 (Linh)
+
+```powershell
+# Chạy trọn gói Giai đoạn 2 (MediaPipe Holistic -> chuẩn hóa -> cố định 48 khung hình -> .npy/.npz)
+python scripts/run_thien_preprocess.py --config configs/preprocess_config.yaml
+```
+
+```python
+import numpy as np
+
+# Phần 3 (Hiếu): Nạp trực tiếp tensor đặc trưng (N, L=48, D=207) cho LSTM / BiLSTM
+train_bundle = np.load("data/features/train.npz", allow_pickle=False)
+X_train, mask_train, y_train = train_bundle["X"], train_bundle["mask"], train_bundle["y"]
+# X_train.shape == (4251, 48, 207) float32 | y_train in 0..29 int64 | 0 NaN/Inf
+
+# Phần 4 (Linh): Tái sử dụng đúng hàm chuẩn hóa của Thiên để tránh lệch train/inference
+from src.preprocess.normalize import normalize_frame
+```
+
+---
+
+## 8. Kiểm thử tự động (Automated Tests)
 
 ```powershell
 pytest -v

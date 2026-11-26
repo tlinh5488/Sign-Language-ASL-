@@ -24,13 +24,16 @@ holistic:
   model_complexity: 1               # 0 = lite, 1 = full, 2 = heavy
   smooth_landmarks: true
   refine_face_landmarks: false      # true -> 478 face points; we keep 468 (contract)
-  min_detection_confidence: 0.5
-  min_tracking_confidence: 0.5
+  min_detection_confidence: 0.4     # selected by 20-video pilot benchmark
+  min_tracking_confidence: 0.4
+  min_side: 0                       # native 224x224 on VSL-v2 crops (fast & ~94% hand detection)
+  max_side: 640                     # downscale 1280x720 QIPEDC frames -> max 640px for speed
   max_frames: null                  # cap decoded frames per video (null = all)
 
 extraction:
-  num_workers: 1                    # >1 uses a process pool (one Holistic per process)
+  num_workers: 10                   # 10-core i5-13450HX ProcessPoolExecutor (1 Holistic per worker)
   overwrite: false                  # skip already-extracted .npz files
+  derive_augmented: true            # transform parent real Holistic landmarks by exact Stage-1 temporal+affine params
   limit: null                       # only first N rows per manifest (debug)
 
 normalization:

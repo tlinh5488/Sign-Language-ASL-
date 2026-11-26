@@ -762,12 +762,8 @@ def test_thien_no_demo_and_production_runner(tmp_path: Path) -> None:
         parser.parse_args(["--demo"])
     assert exc_info.value.code == 2
 
-    # No fake 5-class demo files left in workspace data/landmarks or data/features
-    assert not (REPO_ROOT / "data" / "landmarks").exists(), "Fake demo data/landmarks must not exist!"
-    assert not (REPO_ROOT / "data" / "features").exists(), "Fake demo data/features must not exist!"
-
     guide_text = (REPO_ROOT / "docs" / "preprocess_guide.md").read_text(encoding="utf-8")
-    assert "--demo" not in guide_text.lower()
+    assert "demo" not in guide_text.lower()
 
     # Verify production runner end-to-end (skip_extract=True on isolated tmp_path landmarks)
     ldir = tmp_path / "prod_landmarks"
@@ -789,3 +785,96 @@ def test_thien_no_demo_and_production_runner(tmp_path: Path) -> None:
     assert summary["verification"]["zero_signer_leakage"] is True
     for fname in ("train.npz", "val.npz", "test.npz", "feature_meta.json", "preprocess_summary.json"):
         assert (fdir / fname).exists()
+
+
+def test_real_production_stage2_artifacts_and_worksheet() -> None:
+    """Strict QA gate on REAL 30-class production Stage 2 (Thiên) outputs in
+    `data/landmarks/`, `data/features/`, `docs/`, and `README.md`."""
+    landmarks_dir = REPO_ROOT / "data" / "landmarks"
+    features_dir = REPO_ROOT / "data" / "features"
+
+    expected_counts = {"train": 4251, "val": 294, "test": 309}
+    expected_signer_counts = {"train": 22, "val": 4, "test": 5}
+
+    # 1. Verify landmark index CSVs across all 4,854 real videos (0 errors)
+    for idx_name, exp_n in (
+        ("train_landmarks_index.csv", 4251),
+        ("train_augmented_landmarks_index.csv", 4251),
+        ("val_landmarks_index.csv", 294),
+        ("test_landmarks_index.csv", 309),
+    ):
+        idx_path = landmarks_dir / idx_name
+        assert idx_path.exists(), f"Missing landmark index CSV: {idx_path}"
+        idx_df = pd.read_csv(idx_path)
+        assert len(idx_df) == exp_n
+        assert set(idx_df["status"].astype(str).str.lower()) <= {"ok", "skipped"}
+        assert float(idx_df["hand_detect_ratio"].mean()) > 0.90
+        assert int((idx_df["hand_detect_ratio"] <= 0.0).sum()) == 0
+
+    # 2. Verify packed compressed feature bundles load cleanly with allow_pickle=False
+    split_signers: dict[str, set[str]] = {}
+    for split, exp_n in expected_counts.items():
+        npz_path = features_dir / f"{split}.npz"
+        assert npz_path.exists(), f"Missing packed feature bundle: {npz_path}"
+        with np.load(npz_path, allow_pickle=False) as z:
+            X = z["X"]
+            mask = z["mask"]
+            y = z["y"]
+            sample_ids = z["sample_ids"]
+            signer_ids = z["signer_ids"]
+            labels = z["labels"]
+            is_aug = z["is_augmented"]
+
+            assert X.shape == (exp_n, 48, 207) and X.dtype == np.float32
+            assert mask.shape == (exp_n, 48) and mask.dtype == np.bool_
+            assert y.shape == (exp_n,) and y.dtype == np.int64
+            assert len(sample_ids) == len(signer_ids) == len(labels) == len(is_aug) == exp_n
+            assert set(int(c) for c in np.unique(y)) == set(range(30))
+            assert np.all(np.isfinite(X)), f"{split}.npz contains NaN or Inf"
+
+            signers = set(signer_ids.tolist())
+            assert len(signers) == expected_signer_counts[split]
+            split_signers[split] = signers
+
+    # Zero signer overlap across train / val / test
+    assert split_signers["train"] & split_signers["val"] == set()
+    assert split_signers["train"] & split_signers["test"] == set()
+    assert split_signers["val"] & split_signers["test"] == set()
+    assert len(split_signers["train"] | split_signers["val"] | split_signers["test"]) == 31
+
+    # 3. Verify preprocess_summary.json & feature_meta.json
+    summary_raw = (features_dir / "preprocess_summary.json").read_text(encoding="utf-8")
+    assert "demo" not in summary_raw.lower()
+    summary = json.loads(summary_raw)
+    assert summary["mode"] == "production"
+    assert summary["D"] == 207 and summary["L"] == 48
+    assert summary["total_samples"] == 4854
+    assert summary["per_split_counts"] == expected_counts
+    assert summary["zero_hand_samples_count"] == 0
+    assert summary["overall_detection_stats"]["mean_hand_detect_ratio"] > 0.90
+    assert summary["overall_detection_stats"]["mean_pose_detect_ratio"] == pytest.approx(1.0)
+    assert summary["zero_signer_leakage"] is True
+
+    meta_raw = (features_dir / "feature_meta.json").read_text(encoding="utf-8")
+    assert "demo" not in meta_raw.lower()
+    meta = json.loads(meta_raw)
+    assert meta["D"] == 207 and meta["L"] == 48
+    assert len(meta["feature_names"]) == 207
+    assert meta["per_split_counts"] == expected_counts
+    assert meta["signer_overlap_check_passed"] is True
+    assert len(meta["class_list"]) == 30
+
+    # 4. Verify Thiên's worksheet (.md & .docx) and README Stage 2 section (zero demo)
+    phieu_md = REPO_ROOT / "docs" / "phieu_tim_hieu_phan_2_thien.md"
+    phieu_docx = REPO_ROOT / "docs" / "Phieu_Tim_Hieu_Phan_2_Thien.docx"
+    assert phieu_md.exists() and phieu_md.stat().st_size > 2000
+    assert phieu_docx.exists() and phieu_docx.stat().st_size > 5000
+    phieu_text = phieu_md.read_text(encoding="utf-8")
+    assert "demo" not in phieu_text.lower()
+    for token in ("207", "48", "4.251", "294", "309"):
+        assert token in phieu_text or token.replace(".", ",") in phieu_text
+
+    readme_text = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+    assert "demo" not in readme_text.lower()
+    assert "phieu_tim_hieu_phan_2_thien" in readme_text
+    assert "4251, 48, 207" in readme_text or "(4251, 48, 207)" in readme_text

@@ -33,6 +33,7 @@ import numpy as np
 
 from src.preprocess.build_features import (
     _load_yaml,
+    _rel_posix,
     _resolve,
     assert_no_signer_overlap,
     build_all_features,
@@ -162,13 +163,20 @@ def run_real_preprocess(
     verification = verify_packed_features(cfg_dict, fdir, splits=split_list)
     summary = {
         "mode": "production",
-        "landmarks_dir": str(ldir),
-        "features_dir": str(fdir),
-        "feature_meta_path": str(fdir / "feature_meta.json"),
+        "landmarks_dir": _rel_posix(ldir, root),
+        "features_dir": _rel_posix(fdir, root),
+        "feature_meta_path": _rel_posix(fdir / "feature_meta.json", root),
         "D": meta["D"],
         "L": meta["L"],
+        "total_samples": meta["total_samples"],
         "per_split_counts": meta["per_split_counts"],
         "signer_lists": meta["signer_lists"],
+        "zero_hand_samples_count": meta["zero_hand_samples_count"],
+        "per_split_zero_hand_counts": meta["per_split_zero_hand_counts"],
+        "overall_detection_stats": meta["overall_detection_stats"],
+        "detection_stats": meta["detection_stats"],
+        "packed_files": meta["packed_files"],
+        "zero_signer_leakage": True,
         "verification": verification,
     }
     summary_path = fdir / "preprocess_summary.json"

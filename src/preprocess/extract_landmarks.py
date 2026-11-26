@@ -6,7 +6,8 @@ one raw landmark file per video::
 
     <output_dir>/<split>/<class_id>/<sample_id>.npz
 
-plus an index CSV per split ``<output_dir>/<split>_landmarks_index.csv``.
+plus an index CSV per split ``<output_dir>/<split>_landmarks_index.csv`` (and
+``train_augmented_landmarks_index.csv`` when extracting ``train_augmented.csv``).
 The ``.npz`` layout is defined in :mod:`src.preprocess.landmark_schema`.
 Coordinates are left as MediaPipe normalized image coords (no normalization),
 frames are never flipped.
@@ -24,6 +25,8 @@ CLI::
 from __future__ import annotations
 
 import argparse
+import atexit
+import hashlib
 import logging
 import os
 import sys
@@ -40,6 +43,7 @@ from src.preprocess.landmark_schema import (
     PARTS,
     detection_ratios,
     empty_frame_landmarks,
+    load_raw_landmarks,
     save_raw_landmarks,
     stack_frames,
 )
@@ -71,9 +75,15 @@ DEFAULT_HOLISTIC: dict[str, Any] = {
     "model_complexity": 1,
     "smooth_landmarks": True,
     "refine_face_landmarks": False,
-    "min_detection_confidence": 0.5,
-    "min_tracking_confidence": 0.5,
+    "min_detection_confidence": 0.4,
+    "min_tracking_confidence": 0.4,
+    "min_side": 0,
+    "max_side": 640,
 }
+
+# Process-local persistent Holistic instance for multi-worker extraction
+_WORKER_HOLISTIC: Any = None
+_WORKER_HOLISTIC_CFG: dict[str, Any] = {}
 
 
 # ---------------------------------------------------------------------------
@@ -132,11 +142,12 @@ def results_to_arrays(results: Any) -> dict[str, Any]:
 def create_holistic(
     *,
     model_complexity: int = 1,
-    min_detection_confidence: float = 0.5,
-    min_tracking_confidence: float = 0.5,
+    min_detection_confidence: float = 0.4,
+    min_tracking_confidence: float = 0.4,
     static_image_mode: bool = False,
     smooth_landmarks: bool = True,
     refine_face_landmarks: bool = False,
+    **_ignored: Any,
 ) -> Any:
     """Create a MediaPipe Holistic instance (legacy ``mp.solutions`` API)."""
     if "tensorflow.tools.docs" not in sys.modules:
@@ -168,26 +179,53 @@ def create_holistic(
     )
 
 
+def _resize_for_holistic(bgr: np.ndarray, min_side: int | None, max_side: int | None) -> np.ndarray:
+    """Resize frame preserving aspect ratio so ``min(H, W) >= min_side`` and
+    ``max(H, W) <= max_side``. Since MediaPipe outputs normalized [0, 1] image
+    coordinates, aspect-preserving resize keeps x, y in the exact same
+    normalized coordinate system while speeding up 720p videos."""
+    if not min_side and not max_side:
+        return bgr
+    import cv2
+
+    h, w = bgr.shape[:2]
+    if h <= 0 or w <= 0:
+        return bgr
+    scale = 1.0
+    if min_side and min(h, w) < int(min_side):
+        scale = float(min_side) / float(min(h, w))
+    elif max_side and max(h, w) > int(max_side):
+        scale = float(max_side) / float(max(h, w))
+    if abs(scale - 1.0) < 1e-3:
+        return bgr
+    new_w = max(1, int(round(w * scale)))
+    new_h = max(1, int(round(h * scale)))
+    interp = cv2.INTER_LINEAR if scale > 1.0 else cv2.INTER_AREA
+    return cv2.resize(bgr, (new_w, new_h), interpolation=interp)
+
+
 def extract_video_landmarks(
     video_path: str | Path,
     holistic: Any = None,
     *,
     model_complexity: int = 1,
-    min_detection_confidence: float = 0.5,
-    min_tracking_confidence: float = 0.5,
+    min_detection_confidence: float = 0.4,
+    min_tracking_confidence: float = 0.4,
     max_frames: int | None = None,
+    min_side: int | None = 0,
+    max_side: int | None = 640,
+    reset_holistic: bool = True,
     **holistic_kwargs: Any,
 ) -> dict[str, Any]:
     """Run Holistic on every frame of ``video_path``.
 
     If ``holistic`` is None a fresh instance is created (and closed) for this
-    video. NOTE: when reusing a ``holistic`` across videos in video mode,
-    tracking state carries over; ``extract_manifest`` therefore creates one
-    instance per video.
+    video. When reusing a ``holistic`` instance across videos, ``holistic.reset()``
+    is called before processing if ``reset_holistic=True``.
 
     Returns a dict with ``pose, face, left_hand, right_hand`` ``(T, N, D)``
     float32 arrays, ``*_mask`` ``(T,)`` bool, and ``fps`` (float),
-    ``num_frames`` (int), ``width``, ``height`` (int).
+    ``num_frames`` (int), ``width``, ``height`` (int, original video dimensions).
     Raises ``IOError`` if the video cannot be opened.
     """
     import cv2  # lazy: keep schema-level imports light
@@ -210,6 +248,9 @@ def extract_video_landmarks(
             min_tracking_confidence=min_tracking_confidence,
             **holistic_kwargs,
         )
+    elif reset_holistic and hasattr(holistic, "reset"):
+        holistic.reset()
+
     frames: list[dict[str, Any]] = []
     try:
         while True:
@@ -220,7 +261,8 @@ def extract_video_landmarks(
                 break
             if not width or not height:
                 height, width = bgr.shape[:2]
-            rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
+            proc_bgr = _resize_for_holistic(bgr, min_side=min_side, max_side=max_side)
+            rgb = cv2.cvtColor(proc_bgr, cv2.COLOR_BGR2RGB)
             rgb.flags.writeable = False
             results = holistic.process(rgb)
             frames.append(results_to_arrays(results))
@@ -238,8 +280,139 @@ def extract_video_landmarks(
 
 
 # ---------------------------------------------------------------------------
-# Manifest extraction
+# Exact deterministic Stage-1 augmentation of parent MediaPipe landmarks
 # ---------------------------------------------------------------------------
+def _aug_rng(seed: int, parent_sample_id: str, aug_index: int) -> np.random.Generator:
+    key = f"{seed}:{parent_sample_id}:{aug_index}".encode("utf-8")
+    digest = hashlib.sha256(key).digest()
+    seed_int = int.from_bytes(digest[:8], byteorder="little", signed=False)
+    return np.random.default_rng(seed_int)
+
+
+def derive_augmented_landmarks(
+    parent_raw: Mapping[str, Any],
+    *,
+    sample_id: str,
+    parent_sample_id: str,
+    expected_num_frames: int | None = None,
+    seed: int = 42,
+    speed_range: tuple[float, float] = (0.85, 1.15),
+    trim_max_fraction: float = 0.08,
+    rotation_deg_range: tuple[float, float] = (-8.0, 8.0),
+    scale_range: tuple[float, float] = (0.92, 1.08),
+    translation_frac_range: tuple[float, float] = (-0.04, 0.04),
+) -> dict[str, Any]:
+    """Derive an augmented train clip's raw landmarks from its parent's real
+    MediaPipe Holistic landmarks using the exact Stage-1 deterministic temporal
+    speed resampling, start/end trim, and 2D spatial affine transform."""
+    import cv2
+
+    if "_aug" not in sample_id:
+        raise ValueError(f"cannot parse aug_index from sample_id={sample_id!r}")
+    aug_idx = int(sample_id.rsplit("_aug", 1)[1])
+    rng = _aug_rng(seed, parent_sample_id, aug_idx)
+
+    nf = int(parent_raw["num_frames"])
+    width = int(parent_raw.get("width", 224) or 224)
+    height = int(parent_raw.get("height", 224) or 224)
+
+    # 1. Temporal speed perturbation
+    low_s, high_s = speed_range
+    speed = float(rng.uniform(low_s, high_s))
+    if abs(speed - 1.0) < 0.03:
+        speed = high_s if speed >= 1.0 else low_s
+    if nf <= 2 or abs(speed - 1.0) < 1e-4:
+        indices = list(range(nf))
+    else:
+        target_len = max(4, int(round(nf / float(speed))))
+        indices = [int(round(i)) for i in np.linspace(0, nf - 1, num=target_len)]
+
+    # 2. Temporal start/end trim
+    if trim_max_fraction > 0 and len(indices) > 8:
+        start_trim = float(rng.uniform(0.0, trim_max_fraction))
+        end_trim = float(rng.uniform(0.0, trim_max_fraction))
+        if start_trim > 0.01 or end_trim > 0.01:
+            s_i = int(round(len(indices) * max(0.0, start_trim)))
+            e_i = len(indices) - int(round(len(indices) * max(0.0, end_trim)))
+            if e_i - s_i >= 4:
+                indices = indices[s_i:e_i]
+
+    if expected_num_frames is not None and expected_num_frames > 0 and len(indices) != int(expected_num_frames):
+        raise ValueError(f"derived T={len(indices)} != expected_num_frames={expected_num_frames}")
+
+    # 3. Spatial affine transform (rotation, scale, translation in pixel space -> normalized)
+    angle = float(rng.uniform(*rotation_deg_range))
+    scale = float(rng.uniform(*scale_range))
+    tx = float(rng.uniform(*translation_frac_range))
+    ty = float(rng.uniform(*translation_frac_range))
+
+    center = (width / 2.0, height / 2.0)
+    mat = cv2.getRotationMatrix2D(center, angle, scale).astype(np.float32)
+    mat[0, 2] += float(tx) * width
+    mat[1, 2] += float(ty) * height
+
+    idx_arr = np.asarray(indices, dtype=np.int64)
+    out: dict[str, Any] = {}
+    w_f = float(width)
+    h_f = float(height)
+
+    for key in ARRAY_KEYS:
+        arr = np.asarray(parent_raw[key], dtype=np.float32)[idx_arr].copy()
+        mask = np.asarray(parent_raw[f"{key}_mask"], dtype=bool)[idx_arr].copy()
+        if mask.any():
+            pts = arr[mask]  # (M, N, D)
+            px = pts[..., 0] * w_f
+            py = pts[..., 1] * h_f
+            new_px = mat[0, 0] * px + mat[0, 1] * py + mat[0, 2]
+            new_py = mat[1, 0] * px + mat[1, 1] * py + mat[1, 2]
+            pts[..., 0] = new_px / w_f
+            pts[..., 1] = new_py / h_f
+            pts[..., 2] = pts[..., 2] * float(scale)
+            arr[mask] = pts
+        arr[~mask] = 0.0
+        out[key] = arr.astype(np.float32, copy=False)
+        out[f"{key}_mask"] = mask
+
+    out["fps"] = float(parent_raw.get("fps", 30.0) or 30.0)
+    out["num_frames"] = len(indices)
+    out["width"] = width
+    out["height"] = height
+    return out
+
+
+# ---------------------------------------------------------------------------
+# Worker pool initializer & Manifest extraction
+# ---------------------------------------------------------------------------
+def _close_worker_holistic() -> None:
+    global _WORKER_HOLISTIC
+    if _WORKER_HOLISTIC is not None:
+        try:
+            _WORKER_HOLISTIC.close()
+        except Exception:
+            pass
+        _WORKER_HOLISTIC = None
+
+
+def _init_worker(holistic_kwargs: dict[str, Any]) -> None:
+    """Initialize one persistent MediaPipe Holistic per worker process and pin
+    OpenMP/OpenCV thread counts to 1 to avoid multi-worker thread contention."""
+    global _WORKER_HOLISTIC, _WORKER_HOLISTIC_CFG
+    os.environ["OMP_NUM_THREADS"] = "1"
+    os.environ["MKL_NUM_THREADS"] = "1"
+    os.environ["OPENBLAS_NUM_THREADS"] = "1"
+    os.environ["TF_NUM_INTEROP_THREADS"] = "1"
+    os.environ["TF_NUM_INTRAOP_THREADS"] = "1"
+    try:
+        import cv2
+
+        cv2.setNumThreads(1)
+    except Exception:
+        pass
+    _WORKER_HOLISTIC_CFG = dict(holistic_kwargs)
+    _WORKER_HOLISTIC = create_holistic(**holistic_kwargs)
+    atexit.register(_close_worker_holistic)
+
+
 def _bool(v: Any) -> bool:
     if isinstance(v, str):
         return v.strip().lower() in {"true", "1", "yes", "y", "t"}
@@ -310,12 +483,11 @@ def _fill_stats(row: dict[str, Any], d: Mapping[str, Any]) -> None:
 
 def _process_job(job: dict[str, Any]) -> dict[str, Any]:
     """Extract one video (never raises; errors are recorded in the row)."""
+    global _WORKER_HOLISTIC
     row = _index_row(job)
     out_path = Path(job["abs_out"])
     try:
         if out_path.exists() and not job["overwrite"]:
-            from src.preprocess.landmark_schema import load_raw_landmarks
-
             try:
                 _fill_stats(row, load_raw_landmarks(out_path))
                 row["status"] = "skipped"
@@ -323,10 +495,40 @@ def _process_job(job: dict[str, Any]) -> dict[str, Any]:
             except Exception as exc:  # corrupted file -> re-extract
                 LOGGER.warning("re-extracting corrupted %s (%s)", out_path, exc)
 
+        parent_out = job.get("parent_abs_out")
+        if job.get("derive_augmented") and parent_out and Path(parent_out).exists():
+            try:
+                parent_raw = load_raw_landmarks(parent_out)
+                d = derive_augmented_landmarks(
+                    parent_raw,
+                    sample_id=job["sample_id"],
+                    parent_sample_id=job["parent_sample_id"],
+                    expected_num_frames=job.get("expected_num_frames"),
+                )
+                meta = {
+                    "fps": d["fps"],
+                    "num_frames": d["num_frames"],
+                    "width": d["width"],
+                    "height": d["height"],
+                    "sample_id": job["sample_id"],
+                    "label": job["label"],
+                    "class_id": job["class_id"],
+                    "signer_id": job["signer_id"],
+                    "split": job["split"],
+                }
+                save_raw_landmarks(out_path, d, meta)
+                _fill_stats(row, d)
+                row["status"] = "ok"
+                return row
+            except Exception as exc:
+                LOGGER.warning(
+                    "fallback to video extraction for %s (%s)", job["sample_id"], exc
+                )
+
         video = Path(job["abs_video"])
         if not video.exists():
             raise FileNotFoundError(f"video not found: {video}")
-        d = extract_video_landmarks(video, **job["holistic"])
+        d = extract_video_landmarks(video, holistic=_WORKER_HOLISTIC, **job["holistic"])
         if d["num_frames"] == 0:
             raise ValueError("no frames decoded")
         meta = {
@@ -354,6 +556,56 @@ def _resolve(path: str | Path, root: Path) -> Path:
     return p if p.is_absolute() else root / p
 
 
+def _run_job_batch(
+    batch: list[tuple[int, dict[str, Any]]],
+    results: dict[int, dict[str, Any]],
+    *,
+    workers: int,
+    hk: dict[str, Any],
+    progress: Any,
+    use_holistic_pool: bool = True,
+) -> None:
+    global _WORKER_HOLISTIC
+    if not batch:
+        return
+    if workers == 1 or len(batch) <= 1 or not use_holistic_pool:
+        need_holistic = use_holistic_pool and any(
+            (j["overwrite"] or not Path(j["abs_out"]).exists())
+            and not (j.get("derive_augmented") and j.get("parent_abs_out") and Path(j["parent_abs_out"]).exists())
+            for _, j in batch
+        )
+        own_holistic = False
+        if need_holistic and _WORKER_HOLISTIC is None:
+            _WORKER_HOLISTIC = create_holistic(**hk)
+            own_holistic = True
+        try:
+            for idx, job in batch:
+                results[idx] = _process_job(job)
+                if progress:
+                    progress.update(1)
+        finally:
+            if own_holistic:
+                _close_worker_holistic()
+    else:
+        with ProcessPoolExecutor(
+            max_workers=workers,
+            initializer=_init_worker,
+            initargs=(hk,),
+        ) as ex:
+            futs = {ex.submit(_process_job, job): (idx, job) for idx, job in batch}
+            for fut in as_completed(futs):
+                idx, job = futs[fut]
+                try:
+                    results[idx] = fut.result()
+                except Exception as exc:  # worker crash
+                    row = _index_row(job)
+                    row["status"] = "error"
+                    row["error"] = f"{type(exc).__name__}: {exc}"
+                    results[idx] = row
+                if progress:
+                    progress.update(1)
+
+
 def extract_manifest(
     manifest_csv: str | Path,
     output_dir: str | Path = "data/landmarks",
@@ -363,17 +615,16 @@ def extract_manifest(
     limit: int | None = None,
     *,
     holistic_kwargs: Mapping[str, Any] | None = None,
+    derive_augmented: bool = True,
     show_progress: bool = True,
 ) -> pd.DataFrame:
     """Extract landmarks for every row of a Stage-1 manifest CSV.
 
     Writes ``<output_dir>/<split>/<class_id>/<sample_id>.npz`` and, per split
     present in the manifest, ``<output_dir>/<split>_landmarks_index.csv``
-    (``landmark_path`` is relative to ``output_dir``, posix). Existing files
-    are skipped (status ``skipped``) unless ``overwrite``. Failures are recorded
-    with ``status == "error"`` and an ``error`` message; the run continues.
-    Relative ``manifest_csv``/``output_dir``/``video_path`` resolve against
-    ``root_dir``. Returns the combined index DataFrame.
+    (``landmark_path`` is relative to ``output_dir``, posix). When the input
+    manifest is ``train_augmented.csv``, also writes
+    ``<output_dir>/train_augmented_landmarks_index.csv``.
     """
     root = Path(root_dir).resolve()
     manifest_csv = _resolve(manifest_csv, root)
@@ -387,31 +638,48 @@ def extract_manifest(
         df = df.head(int(limit))
 
     hk = dict(DEFAULT_HOLISTIC)
-    hk.update({k: v for k, v in (holistic_kwargs or {}).items() if v is not None or k == "max_frames"})
+    hk.update({k: v for k, v in (holistic_kwargs or {}).items() if v is not None or k in ("max_frames", "min_side", "max_side")})
+
+    out_path_by_sid: dict[str, str] = {}
+    for rec in df.to_dict("records"):
+        split = _str(rec.get("split")) or "unknown"
+        sid = _str(rec.get("sample_id"))
+        rel = landmark_rel_path(split, rec.get("class_id"), sid)
+        out_path_by_sid[sid] = str(out_root / rel)
 
     jobs: list[dict[str, Any]] = []
     for rec in df.to_dict("records"):
         split = _str(rec.get("split")) or "unknown"
         sid = _str(rec.get("sample_id"))
+        pid = _str(rec.get("parent_sample_id"))
+        is_aug = _bool(rec.get("is_augmented", False))
         rel = landmark_rel_path(split, rec.get("class_id"), sid)
+        parent_abs_out = out_path_by_sid.get(pid, "") if (is_aug and pid) else ""
+        if not parent_abs_out and is_aug and pid:
+            cand = out_root / landmark_rel_path(split, rec.get("class_id"), pid)
+            if cand.exists():
+                parent_abs_out = str(cand)
         jobs.append(
             {
                 "sample_id": sid,
+                "parent_sample_id": pid,
                 "landmark_path": rel,
                 "video_path": _str(rec.get("video_path")),
                 "label": _str(rec.get("label")),
                 "class_id": _int(rec.get("class_id")),
                 "signer_id": _str(rec.get("signer_id")),
                 "split": split,
-                "is_augmented": _bool(rec.get("is_augmented", False)),
+                "is_augmented": is_aug,
+                "expected_num_frames": _int(rec.get("num_frames"), default=-1),
                 "abs_video": str(_resolve(_str(rec.get("video_path")), root)),
                 "abs_out": str(out_root / rel),
+                "parent_abs_out": parent_abs_out,
+                "derive_augmented": bool(derive_augmented and is_aug and pid),
                 "overwrite": bool(overwrite),
                 "holistic": hk,
             }
         )
 
-    rows: list[dict[str, Any]] = []
     t0 = time.time()
     progress = None
     if show_progress:
@@ -423,36 +691,42 @@ def extract_manifest(
             progress = None
 
     workers = max(1, int(num_workers or 1))
-    if workers == 1 or len(jobs) <= 1:
-        for job in jobs:
-            rows.append(_process_job(job))
-            if progress:
-                progress.update(1)
-    else:
-        with ProcessPoolExecutor(max_workers=workers) as ex:
-            futs = {ex.submit(_process_job, job): i for i, job in enumerate(jobs)}
-            results: dict[int, dict[str, Any]] = {}
-            for fut in as_completed(futs):
-                i = futs[fut]
-                try:
-                    results[i] = fut.result()
-                except Exception as exc:  # worker crash
-                    row = _index_row(jobs[i])
-                    row["status"] = "error"
-                    row["error"] = f"{type(exc).__name__}: {exc}"
-                    results[i] = row
-                if progress:
-                    progress.update(1)
-            rows = [results[i] for i in range(len(jobs))]
+    results: dict[int, dict[str, Any]] = {}
+
+    primary_batch = [(i, j) for i, j in enumerate(jobs) if not j["derive_augmented"]]
+    derived_batch = [(i, j) for i, j in enumerate(jobs) if j["derive_augmented"]]
+
+    _run_job_batch(
+        primary_batch,
+        results,
+        workers=workers,
+        hk=hk,
+        progress=progress,
+        use_holistic_pool=True,
+    )
+    _run_job_batch(
+        derived_batch,
+        results,
+        workers=1,
+        hk=hk,
+        progress=progress,
+        use_holistic_pool=False,
+    )
+
     if progress:
         progress.close()
 
+    rows = [results[i] for i in range(len(jobs))]
     index = pd.DataFrame(rows, columns=INDEX_COLUMNS)
     out_root.mkdir(parents=True, exist_ok=True)
     for split, part in index.groupby("split", sort=False):
         idx_path = out_root / f"{split}_landmarks_index.csv"
         part.to_csv(idx_path, index=False, encoding="utf-8")
         LOGGER.info("wrote %s (%d rows)", idx_path, len(part))
+        if split == "train" and manifest_csv.stem == "train_augmented":
+            aug_idx_path = out_root / "train_augmented_landmarks_index.csv"
+            part.to_csv(aug_idx_path, index=False, encoding="utf-8")
+            LOGGER.info("wrote %s (%d rows)", aug_idx_path, len(part))
 
     counts = index["status"].value_counts().to_dict()
     LOGGER.info(
@@ -505,6 +779,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     p.add_argument("--workers", type=int, default=None)
     p.add_argument("--max-frames", type=int, default=None)
     p.add_argument("--model-complexity", type=int, choices=[0, 1, 2], default=None)
+    p.add_argument("--no-derive-augmented", action="store_true")
     p.add_argument("--no-progress", action="store_true")
     return p
 
@@ -530,9 +805,10 @@ def main(argv: list[str] | None = None) -> int:
         if args.manifest
         else resolve_manifests(cfg, args.splits, root)
     )
-    workers = args.workers if args.workers is not None else int(ext.get("num_workers", 1) or 1)
+    workers = args.workers if args.workers is not None else int(ext.get("num_workers", 10) or 10)
     overwrite = args.overwrite or bool(ext.get("overwrite", False))
     limit = args.limit if args.limit is not None else ext.get("limit")
+    derive_aug = not args.no_derive_augmented and bool(ext.get("derive_augmented", True))
 
     n_err = 0
     for m in manifests:
@@ -548,6 +824,7 @@ def main(argv: list[str] | None = None) -> int:
             num_workers=workers,
             limit=limit,
             holistic_kwargs=hol,
+            derive_augmented=derive_aug,
             show_progress=not args.no_progress,
         )
         errs = index[index["status"] == "error"]
@@ -556,7 +833,10 @@ def main(argv: list[str] | None = None) -> int:
         print(
             f"[extract_landmarks] {m.name}: {len(index)} rows, "
             f"status={index['status'].value_counts().to_dict()}, "
-            f"mean hand_detect_ratio={index['hand_detect_ratio'].mean() if len(index) else 0:.3f}"
+            f"mean hand_detect_ratio={index['hand_detect_ratio'].mean() if len(index) else 0:.4f}, "
+            f"mean pose_detect_ratio={index['pose_detect_ratio'].mean() if len(index) else 0:.4f}, "
+            f"mean face_detect_ratio={index['face_detect_ratio'].mean() if len(index) else 0:.4f}",
+            flush=True,
         )
     return 1 if n_err else 0
 

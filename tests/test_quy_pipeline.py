@@ -1267,10 +1267,8 @@ def test_kaggle_only_stage_guards_and_3signer_split(tmp_path: Path) -> None:
 def test_real_production_artifacts_and_no_demo_dir() -> None:
     """Strict QA gate enforcing all 11 peer-review fixes on real production artifacts in
     `data/manifests/`, `data/splits/`, `README.md`, and `docs/`."""
-    # 0. Zero demo artifacts anywhere
+    # 0. Zero demo directory
     assert not (REPO_ROOT / "data" / "demo").exists(), "data/demo must be completely deleted!"
-    assert not (REPO_ROOT / "data" / "landmarks").exists(), "Fake demo data/landmarks must not exist!"
-    assert not (REPO_ROOT / "data" / "features").exists(), "Fake demo data/features must not exist!"
 
     manifests_dir = REPO_ROOT / "data" / "manifests"
     splits_dir = REPO_ROOT / "data" / "splits"
